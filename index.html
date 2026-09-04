@@ -208,6 +208,7 @@
   <div class="brand">
     <h1>SỔ LỊCH NAIL - MISA NAILS</h1>
     <div class="top-btns">
+      <button class="icon-btn" id="keyConfigBtn" title="Cấu hình Key AI">⚙️</button>
       <button class="icon-btn" id="searchToggle" title="Tìm kiếm">🔎</button>
     </div>
   </div>
@@ -246,9 +247,9 @@
     <h2 id="sheetTitle" class="serif">Thêm khách hẹn</h2>
     
     <div class="ai-box">
-      <label>⚡ NHẬP CÂU NÓI ĐỂ TỰ ĐIỀN SIÊU TỐC:</label>
-      <textarea id="aiInput" placeholder="VD: Misa sdt 0909999 hẹn 11:30 chân nước"></textarea>
-      <button id="aiParseBtn">⚡ Phân Tích & Tự Điền Ô Tức Thì</button>
+      <label>✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ AI TỰ ĐIỀN Ô:</label>
+      <textarea id="aiInput" placeholder="VD: Maria SĐT 0412345678 hẹn 2 giờ chiều ngày mai làm Refill Acrylic"></textarea>
+      <button id="aiParseBtn">✨ AI Phân Tích & Tự Điền Ô</button>
     </div>
 
     <div class="field">
@@ -318,7 +319,7 @@ function initFirebaseListener(){
   });
 }
 
-function showToast(msg, duration = 3000){
+function showToast(msg, duration = 4000){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
@@ -533,6 +534,21 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
+document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
+  const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
+  const inputKey = prompt("Dán API Key copy từ Google AI Studio (aistudio.google.com) vào đây:", currentKey);
+  
+  if (inputKey !== null) {
+    const trimmed = inputKey.trim().replace(/[\r\n\s]/g, '');
+    if (!trimmed) {
+      alert("API Key không được để trống!");
+      return;
+    }
+    localStorage.setItem('GEMINI_API_KEY', trimmed);
+    showToast('Đã lưu API Key thành công!');
+  }
+});
+
 function openSheet(id){
   editingId = id || null;
   const overlay = document.getElementById('overlay');
@@ -570,73 +586,96 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Hàm Phân Tích Local Siêu Tốc (Xử lý ngay tại trình duyệt, phản hồi trong 0.01 giây)
-document.getElementById('aiParseBtn').addEventListener('click', ()=>{
-  const text = document.getElementById('aiInput').value.trim();
-  if(!text) { showToast('Hãy nhập câu thoại trước'); return; }
+// Gọi Gemini AI với Model thế hệ mới & Cơ chế dự phòng
+async function fetchGeminiAI(promptText, apiKey) {
+  const models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+  let lastError = null;
 
-  let extractedName = '';
-  let extractedPhone = '';
-  let extractedTime = '';
-  let extractedService = '';
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            response_mime_type: "application/json"
+          }
+        })
+      });
 
-  // 1. Tìm số điện thoại (chuỗi từ 8-12 chữ số)
-  const phoneMatch = text.match(/(\d{8,12})/);
-  if (phoneMatch) {
-    extractedPhone = phoneMatch[1];
-  }
-
-  // 2. Tìm thời gian (ví dụ: 11:30, 11h30, 2h, 14g)
-  const timeMatch = text.match(/(\d{1,2})[:hg](\d{2})?|(\d{1,2})\s*(giờ|h|g)/i);
-  if (timeMatch) {
-    let hours = 0;
-    let mins = '00';
-
-    if (timeMatch[1] !== undefined) {
-      hours = parseInt(timeMatch[1], 10);
-      if (timeMatch[2]) mins = timeMatch[2];
-    } else if (timeMatch[3] !== undefined) {
-      hours = parseInt(timeMatch[3], 10);
-    }
-
-    if (text.toLowerCase().includes('chiều') && hours < 12) {
-      hours += 12;
-    }
-    extractedTime = `${pad(hours)}:${pad(mins)}`;
-  }
-
-  // 3. Tách tên và dịch vụ dựa trên từ khóa phân cách
-  let workingText = text;
-  if (phoneMatch) workingText = workingText.replace(phoneMatch[0], ' ');
-  if (timeMatch) workingText = workingText.replace(timeMatch[0], ' ');
-
-  // Loại bỏ các từ thừa
-  workingText = workingText.replace(/(sđt|sdt|đt|điện thoại|hẹn|ngày|giờ|chiều|sáng)/gi, '|');
-  
-  const parts = workingText.split('|').map(p => p.trim()).filter(p => p.length > 0);
-
-  if (parts.length > 0) {
-    extractedName = parts[0];
-  }
-  if (parts.length > 1) {
-    extractedService = parts.slice(1).join(' ');
-  } else if (!extractedService) {
-    const commonServices = ['chân nước', 'tay nước', 'sơn gel', 'refill', 'acrylic', 'french', 'bột', 'tháo gel'];
-    for (const service of commonServices) {
-      if (text.toLowerCase().includes(service)) {
-        extractedService = service;
-        break;
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || `Lỗi HTTP ${response.status}`);
       }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Model ${model} không phản hồi, đang thử model tiếp theo...`, err);
     }
   }
+  throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
+}
 
-  // Điền dữ liệu vào form
-  if (extractedName) document.getElementById('fName').value = extractedName;
-  if (extractedPhone) document.getElementById('fPhone').value = extractedPhone;
-  if (extractedTime) document.getElementById('fTime').value = extractedTime;
-  if (extractedService) document.getElementById('fService').value = extractedService;
+document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('aiInput').value.trim();
+  if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
 
-  showToast('⚡ Đã tự động điền các ô thành công!');
+  let rawKey = localStorage.getItem('GEMINI_API_KEY');
+  const geminiApiKey = rawKey ? rawKey.trim().replace(/[\r\n\s]/g, '') : '';
+
+  if(!geminiApiKey){
+    showToast('⚠️ Nhấp vào biểu tượng ⚙️ ở góc trên để dán API Key');
+    return;
+  }
+
+  const btn = document.getElementById('aiParseBtn');
+  btn.disabled = true;
+  btn.textContent = '⚡ AI đang xử lý...';
+
+  const todayStr = dateKey(new Date());
+
+  const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý xếp lịch tiệm Nail.
+Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn:
+{
+  "name": "Tên khách",
+  "phone": "Số điện thoại",
+  "date": "YYYY-MM-DD",
+  "time": "HH:MM",
+  "service": "Tên dịch vụ",
+  "note": "Ghi chú"
+}
+Văn bản: "${text}"`;
+
+  try {
+    const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
+
+    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    if(parsed.name) document.getElementById('fName').value = parsed.name;
+    if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
+    if(parsed.date) document.getElementById('fDate').value = parsed.date;
+    if(parsed.time) document.getElementById('fTime').value = parsed.time;
+    if(parsed.service) document.getElementById('fService').value = parsed.service;
+    if(parsed.note) document.getElementById('fNote').value = parsed.note;
+
+    showToast('✨ AI đã phân tích và điền xong!');
+
+  } catch (e) {
+    console.error("Lỗi xử lý AI:", e);
+    showToast(`⚠️ Lỗi: ${e.message}`, 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ AI Phân Tích & Tự Điền Ô';
+  }
 });
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
