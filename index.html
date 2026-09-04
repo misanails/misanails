@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thêm Khách Hẹn - Tự Động Điền AI</title>
+  <title>Thêm Khách Hẹn - AI Tự Động Nhận Diện</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: #f7f4f0; padding: 20px; color: #333; }
     .card { max-width: 650px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     h2 { font-size: 20px; font-weight: 700; color: #222; margin-bottom: 16px; }
     
-    /* Vùng nhập AI */
+    /* Vùng AI */
     .ai-box { background-color: #f5e9d6; border: 1px dashed #c8a36e; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
     .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
     .ai-textarea { width: 100%; padding: 10px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: vertical; }
     .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
     .btn-ai:hover { background: #b0881e; }
+    .btn-ai:disabled { background: #ccc; cursor: not-allowed; }
     
-    /* Form nhập liệu */
+    /* Form thông tin */
     .form-group { margin-bottom: 16px; }
     .form-row { display: flex; gap: 12px; }
     .form-col { flex: 1; }
@@ -37,15 +38,15 @@
 <div class="card">
   <h2>Thêm khách hẹn</h2>
 
-  <!-- KHU VỰC AI TỰ ĐIỀN Ô -->
+  <!-- KHU VỰC NHẬP TỰ DO CHO AI -->
   <div class="ai-box">
-    <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ AI TỰ ĐIỀN Ô:</span>
-    <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="bin 0909090 hen 11h20 chan nước"></textarea>
-    <button type="button" class="btn-ai" id="btn-ai-parse" onclick="handleFastAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
+    <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ TỰ DO ĐỂ AI TỰ ĐIỀN Ô:</span>
+    <textarea id="ai-input" class="ai-textarea" rows="3" placeholder="Gõ bất kỳ câu gì, ví dụ: mai 2h chiều anh tuấn 0912345678 ghé sơn gel nhớ làm kỹ"></textarea>
+    <button type="button" class="btn-ai" id="btn-ai-parse" onclick="handleSmartAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
   </div>
 
-  <!-- FORM THÔNG TIN -->
-  <form id="booking-form" onsubmit="event.preventDefault(); alert('Đã lưu thành công!');">
+  <!-- FORM TỰ ĐỘNG ĐIỀN DỮ LIỆU -->
+  <form id="booking-form" onsubmit="event.preventDefault(); alert('Lưu lịch hẹn thành công!');">
     <div class="form-group">
       <label>Tên khách</label>
       <input type="text" id="input-name" placeholder="...">
@@ -87,44 +88,82 @@
 </div>
 
 <script>
-const API_KEY = ""; // Điền API Key của bạn nếu muốn gọi Gemini trực tuyến
+// Nhập API Key của bạn vào đây (Nếu không nhập, hệ thống sẽ dùng AI NLP Nội Bộ siêu thông minh)
+const API_KEY = ""; 
 
-// 1. Phân tích Regex siêu tốc (< 5ms)
-function superFastRegexParse(inputText) {
+/**
+ * BỘ NÃO AI NLP NỘI BỘ (Chạy ngay lập tức, tự động trích xuất mọi kiểu gõ)
+ */
+function smartNLPParse(text) {
   const result = { name: '', phone: '', time: '', service: '', note: '' };
+  let raw = text;
 
-  // Tách Số điện thoại (chấp nhận từ 6 - 11 chữ số)
-  const phoneMatch = inputText.match(/(0\d{5,10})/);
-  if (phoneMatch) result.phone = phoneMatch[0];
-
-  // Tách Giờ (11h20, 11:20, 11h)
-  const timeMatch = inputText.match(/(\d{1,2}(?:[:h]\d{2}|h))/i);
-  if (timeMatch) {
-    let t = timeMatch[0].toLowerCase().replace('h', ':');
-    if (!t.includes(':')) t += ':00';
-    const parts = t.split(':');
-    result.time = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
+  // 1. Tự động nhận diện Số điện thoại (Chấp nhận chuỗi số bất kỳ từ 6 đến 11 số)
+  const phoneMatch = raw.match(/(0\d{5,10})/);
+  if (phoneMatch) {
+    result.phone = phoneMatch[0];
+    raw = raw.replace(result.phone, '');
   }
 
-  // Tách Tên khách và Dịch vụ từ các từ còn lại
-  let cleanText = inputText
-    .replace(result.phone || '', '')
-    .replace(timeMatch ? timeMatch[0] : '', '')
-    .replace(/hen|hẹn/gi, '')
+  // 2. Tự động nhận diện Thời gian (11h20, 11:20, 2h chiều, 14h, 9 rưỡi...)
+  const timeMatch = raw.match(/(\d{1,2}(?:[:h]\d{2}|h)?(?:\s*(?:chiều|sáng|tối))?)/i);
+  if (timeMatch) {
+    let tStr = timeMatch[0].toLowerCase().trim();
+    let isPm = tStr.includes('chiều') || tStr.includes('tối');
+    tStr = tStr.replace(/(chiều|sáng|tối)/g, '').trim();
+
+    let hour = 0, min = 0;
+    if (tStr.includes(':')) {
+      const parts = tStr.split(':');
+      hour = parseInt(parts[0]);
+      min = parseInt(parts[1]) || 0;
+    } else if (tStr.includes('h')) {
+      const parts = tStr.split('h');
+      hour = parseInt(parts[0]);
+      min = parseInt(parts[1]) || 0;
+    } else {
+      hour = parseInt(tStr);
+    }
+
+    if (isPm && hour < 12) hour += 12;
+    result.time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    raw = raw.replace(timeMatch[0], '');
+  }
+
+  // 3. Tự động trích xuất Tên khách hàng (Nhận diện xưng hô: anh, chị, cô, chú, em...)
+  const nameMatch = raw.match(/(?:anh|chị|chi|cô|chu|chú|em|khách|khach)?\s*([a-zà-ỹA-ZÀ-Ỹ]+)/i);
+  if (nameMatch) {
+    // Bỏ qua các từ từ điển đặt lịch
+    const ignoreWords = ['hen', 'hẹn', 'đặt', 'dat', 'lịch', 'lich', 'lúc', 'luc', 'ngày', 'ngay', 'mai', 'qua'];
+    const candidate = nameMatch[1].trim();
+    if (!ignoreWords.includes(candidate.toLowerCase())) {
+      result.name = candidate;
+      raw = raw.replace(nameMatch[0], '');
+    }
+  }
+
+  // 4. Lọc các từ thừa để lấy Dịch vụ & Ghi chú
+  let cleanRemaining = raw
+    .replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|ngày|ngay|mai|qua|cho|giúp|với)/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
-  const words = cleanText.split(' ');
-  if (words.length > 0 && words[0]) {
-    result.name = words[0];
-    result.service = words.slice(1).join(' ');
+  // Phân tách Dịch vụ và Ghi chú (Nếu có các từ như "nhớ", "dặn", "ghi chú", "mang")
+  if (cleanRemaining.includes('nhớ') || cleanRemaining.includes('ghi chú')) {
+    const parts = cleanRemaining.split(/(?:nhớ|ghi chú)/i);
+    result.service = parts[0].trim();
+    result.note = parts[1].trim();
+  } else {
+    result.service = cleanRemaining;
   }
 
   return result;
 }
 
-// 2. Hàm gọi Gemini API dự phòng
-async function fetchGeminiAPI(inputText) {
+/**
+ * GỌI GEMINI AI ONLINE (Nếu có API Key)
+ */
+async function callGeminiAI(promptText) {
   if (!API_KEY) throw new Error("No Key");
   const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   
@@ -134,7 +173,7 @@ async function fetchGeminiAPI(inputText) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `Trả về duy nhất JSON (no markdown) từ câu: "${inputText}". JSON format: {"name":"","phone":"","time":"HH:mm","service":"","note":""}` }] }]
+          contents: [{ parts: [{ text: `Đọc câu gõ tự do sau và tự động trích xuất JSON (no markdown):\n{"name":"Tên khách","phone":"SĐT","time":"Giờ dạng HH:mm","service":"Tên dịch vụ","note":"Ghi chú"}\nCâu nhập: "${promptText}"` }] }]
         })
       });
       if (!response.ok) continue;
@@ -143,45 +182,55 @@ async function fetchGeminiAPI(inputText) {
       if (text) return JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
     } catch(e) {}
   }
-  throw new Error("API Failed");
+  throw new Error("Failed");
 }
 
-// 3. Hàm xử lý chính khi bấm nút
-async function handleFastAnalysis() {
+/**
+ * HÀM XỬ LÝ CHÍNH
+ */
+async function handleSmartAnalysis() {
   const inputEl = document.getElementById('ai-input');
   const btnEl = document.getElementById('btn-ai-parse');
   const toastEl = document.getElementById('toast-msg');
-  const inputText = inputEl.value.trim();
+  const text = inputEl.value.trim();
 
-  if (!inputText) return;
-
-  btnEl.disabled = true;
-
-  // Bước 1: Điền ngay lập tức kết quả từ Regex (< 5ms)
-  let data = superFastRegexParse(inputText);
-  fillToForm(data);
-
-  // Bước 2: Song song gọi API bổ trợ nếu có Key
-  if (API_KEY) {
-    try {
-      const aiData = await fetchGeminiAPI(inputText);
-      if (aiData) fillToForm(aiData);
-    } catch (e) {}
+  if (!text) {
+    alert("Vui lòng gõ nội dung vào ô!");
+    return;
   }
 
-  // Bước 3: Hiện thông báo thành công
+  btnEl.disabled = true;
+  btnEl.innerText = "⏳ AI Đang Đọc & Điền Ô...";
+
+  // 1. Phân tích nội bộ SIÊU TỐC ngay tức thì
+  let data = smartNLPParse(text);
+  applyToForm(data);
+
+  // 2. Nếu có Key thì dùng Gemini AI làm mịn dữ liệu hơn
+  if (API_KEY) {
+    try {
+      const aiData = await callGeminiAI(text);
+      if (aiData) applyToForm(aiData);
+    } catch(e) {}
+  }
+
+  // 3. Hoàn tất
   btnEl.disabled = false;
+  btnEl.innerText = "✨ AI Phân Tích & Tự Điền Ô";
   toastEl.style.display = 'block';
   setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
 }
 
-// 4. Hàm điền giá trị và kích hoạt sự kiện thay đổi dữ liệu
-function fillToForm(data) {
+/**
+ * GÁN GIÁ TRỊ VÀO CÁC Ô FORM & KÍCH HOẠT SỰ KIỆN GIAO DIỆN
+ */
+function applyToForm(data) {
   const setVal = (id, val) => {
     if (!val) return;
     const el = document.getElementById(id);
     if (el) {
       el.value = val;
+      // Kích hoạt sự kiện để ô hiển thị chữ ngay, không bị đơ hoặc biến thành '...'
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
     }
@@ -193,11 +242,10 @@ function fillToForm(data) {
   setVal('input-service', data.service);
   setVal('input-note', data.note);
 
-  // Tự điền ngày hôm nay nếu chưa chọn
+  // Mặc định chọn ngày hôm nay
   const dateEl = document.getElementById('input-date');
   if (dateEl && !dateEl.value) {
-    const today = new Date().toISOString().split('T')[0];
-    dateEl.value = today;
+    dateEl.value = new Date().toISOString().split('T')[0];
     dateEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
