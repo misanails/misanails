@@ -3,53 +3,81 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misa Nails - Quản Lý Lịch Hẹn Firebase</title>
+  <title>SỔ LỊCH NAIL</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #f7f4f0; padding: 25px 15px; color: #333; }
-    .container { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
-    
-    .card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f0e2d3; }
-    h2 { font-size: 20px; font-weight: 700; color: #2a2017; margin-bottom: 18px; }
-    
-    .ai-box { background-color: #f7ede1; border: 1px dashed #d8b88d; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
-    .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
-    .ai-textarea { width: 100%; padding: 10px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; color: #333; }
-    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
-    .btn-ai:hover { background: #b0881e; }
-    
-    .form-group { margin-bottom: 16px; }
+    :root {
+      --primary-color: #a82e43;
+      --bg-color: #f8f4f1;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #e8e0d8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; position: relative; padding-bottom: 80px; }
+
+    /* HEADER */
+    header { background: #fff; padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .logo-title { font-size: 13px; font-weight: 700; color: #666; letter-spacing: 0.5px; }
+    .search-icon { font-size: 18px; cursor: pointer; color: #666; }
+
+    /* DATE BANNER */
+    .date-banner { padding: 15px 20px; background: #fff; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--border-color); }
+    .big-day { font-size: 36px; font-weight: 800; color: #111; line-height: 1; }
+    .date-details { font-size: 13px; color: var(--primary-color); font-weight: 600; }
+    .sub-date { font-size: 12px; color: #888; display: block; margin-top: 2px; }
+
+    /* TAB NAV */
+    .tab-nav { display: flex; background: #fff; border-bottom: 1px solid var(--border-color); }
+    .tab-item { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
+    /* NAV BAR DAY CONTROL */
+    .day-nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: var(--bg-color); }
+    .nav-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: #ebdcd3; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .current-view-title { font-size: 14px; font-weight: 700; color: #444; }
+    .btn-today { background: #f0e6dd; border: 1px solid #d4c3b5; border-radius: 15px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; }
+
+    /* APPOINTMENT CONTAINER */
+    .calendar-content { padding: 20px; max-width: 800px; margin: 0 auto; min-height: 250px; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #777; }
+    .empty-state h3 { font-size: 15px; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; color: #888; }
+
+    .appt-card { background: #fff; border-radius: 10px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .appt-time { background: var(--primary-color); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; display: inline-block; margin-bottom: 5px; }
+    .appt-name { font-size: 16px; font-weight: 700; color: #222; }
+    .appt-phone { font-size: 13px; color: #666; }
+    .appt-service { font-size: 13px; color: #444; margin-top: 4px; }
+    .appt-actions button { background: none; border: none; padding: 5px 8px; font-size: 13px; cursor: pointer; font-weight: 600; }
+    .btn-edit-act { color: #c59b27; }
+    .btn-del-act { color: #c53030; }
+
+    /* FLOATING ADD BUTTON */
+    .btn-float-add { position: fixed; bottom: 25px; right: 25px; background: var(--primary-color); color: #fff; border: none; border-radius: 25px; padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(168, 46, 67, 0.3); display: flex; align-items: center; gap: 6px; z-index: 99; }
+
+    /* MODAL SLIDE UP FORM */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: flex-end; flex-direction: column; z-index: 100; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: var(--bg-color); border-radius: 20px 20px 0 0; padding: 20px 24px 30px; width: 100%; max-width: 900px; margin: 0 auto; max-height: 90vh; overflow-y: auto; position: relative; box-shadow: 0 -5px 25px rgba(0,0,0,0.15); animation: slideUp 0.25s ease-out; }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    .drag-handle { width: 36px; height: 4px; background: #ccc; border-radius: 2px; margin: 0 auto 15px; }
+    .modal-title { font-size: 18px; font-weight: 700; color: #222; margin-bottom: 15px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; color: #555; margin-bottom: 5px; font-weight: 600; }
+    .form-group input, .form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid #e2d7cc; border-radius: 8px; font-size: 14px; background: #fff; outline: none; }
     .form-row { display: flex; gap: 12px; }
     .form-col { flex: 1; }
-    label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 600; }
-    input { width: 100%; padding: 10px 12px; border: 1px solid #e8e2da; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
-    input:focus { border-color: #c59b27; }
+    .hint-text { font-size: 11px; color: #999; margin-top: 4px; }
 
-    .actions { display: flex; gap: 12px; margin-top: 20px; }
-    .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
-    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
-
-    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .badge-count { background: #f7ede1; color: #a37233; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; }
-    .status-cloud { font-size: 12px; color: #2e7d32; font-weight: 600; display: block; margin-top: 4px; }
-    
-    .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; background: #faf6f0; padding: 12px; border-radius: 8px; border: 1px solid #eedec8; }
-    .filter-bar input[type="text"] { flex: 2; min-width: 160px; }
-    .filter-bar input[type="date"] { flex: 1; min-width: 140px; }
-    .btn-reset-filter { background: #a82e43; border: none; padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #fff; cursor: pointer; }
-
-    .appointment-item { background: #faf8f5; border: 1px solid #eae2d8; border-radius: 8px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .appt-info h4 { font-size: 15px; color: #2a2017; margin-bottom: 4px; font-weight: 700; }
-    .appt-info p { font-size: 13px; color: #666; margin-bottom: 2px; }
-    .appt-time { background: #c59b27; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
-    
-    .item-actions { display: flex; gap: 6px; }
-    .btn-edit { background: #fff; border: 1px solid #c59b27; color: #c59b27; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 10px; border-radius: 4px; }
-    .btn-delete { background: #fff; border: 1px solid #c53030; color: #c53030; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 10px; border-radius: 4px; }
-    .empty-msg { text-align: center; color: #888; font-size: 14px; padding: 25px 0; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+    .btn-modal-cancel { flex: 1; background: #fff; border: 1px solid #d4c3b5; padding: 14px; border-radius: 8px; font-weight: 700; color: #555; cursor: pointer; text-align: center; }
+    .btn-modal-save { flex: 1; background: var(--primary-color); border: none; padding: 14px; border-radius: 8px; font-weight: 700; color: #fff; cursor: pointer; text-align: center; font-size: 14px; }
   </style>
 
-  <!-- Thư viện Firebase JS SDK -->
+  <!-- Firebase JS SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -70,55 +98,51 @@
 
     window.globalAppointments = [];
 
-    // LẮNG NGHE & ĐỒNG BỘ REALTIME
+    // Lắng nghe dữ liệu Firebase Realtime
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
       }));
-      document.getElementById('cloud-status').innerText = "🟢 Firebase Realtime - Đã kết nối";
-      renderList();
+      renderAppointments();
     }, (error) => {
       console.error(error);
-      document.getElementById('cloud-status').innerText = "🔴 Lỗi kết nối Firebase!";
     });
 
-    // LƯU HOẶC CẬP NHẬT LỊCH HẸN
-    document.getElementById('booking-form').addEventListener('submit', async function(e) {
+    // Thêm hoặc Cập nhật Lịch
+    document.getElementById('modal-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const docId = document.getElementById('editing-id').value;
       const itemData = {
         name: document.getElementById('input-name').value.trim() || 'Khách không tên',
-        phone: document.getElementById('input-phone').value.trim() || 'Chưa có SĐT',
-        date: document.getElementById('input-date').value || getTodayStr(),
-        time: document.getElementById('input-time').value || '--:--',
-        service: document.getElementById('input-service').value.trim() || 'Dịch vụ chung',
+        phone: document.getElementById('input-phone').value.trim() || '',
+        date: document.getElementById('input-date').value || window.currentSelectedDate,
+        time: document.getElementById('input-time').value || '09:00',
+        service: document.getElementById('input-service').value.trim() || 'Dịch vụ Nail',
         note: document.getElementById('input-note').value.trim() || ''
       };
 
       try {
         if (docId) {
           await updateDoc(doc(db, "appointments", docId), itemData);
-          alert('✅ Cập nhật lịch hẹn thành công!');
         } else {
           await addDoc(appointmentsCol, itemData);
-          alert('✅ Đã thêm lịch hẹn mới lên Firebase!');
         }
-        resetForm();
+        closeModal();
       } catch (err) {
-        alert('❌ Lỗi lưu dữ liệu: ' + err.message);
+        alert('Lỗi lưu dữ liệu: ' + err.message);
       }
     });
 
-    // XOÁ LỊCH HẸN
+    // Xoá Lịch
     window.deleteItem = async function(docId) {
       if (confirm('Bạn có chắc chắn muốn xoá lịch hẹn này?')) {
         try {
           await deleteDoc(doc(db, "appointments", docId));
         } catch (err) {
-          alert('❌ Không thể xoá lịch!');
+          alert('Không thể xoá lịch!');
         }
       }
     };
@@ -126,246 +150,221 @@
 </head>
 <body>
 
-<div class="container">
-  <div class="card">
-    <h2 id="form-title">Thêm lịch hẹn mới</h2>
+  <!-- HEADER -->
+  <header>
+    <div class="logo-title">SỔ LỊCH NAIL</div>
+    <div class="search-icon">🔍</div>
+  </header>
 
-    <div class="ai-box">
-      <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ TỰ DO ĐỂ AI TỰ ĐIỀN Ô:</span>
-      <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="VD: minh dt 090909090 hen ngay mai 12h28 lam chan nuoc"></textarea>
-      <button type="button" class="btn-ai" id="btn-ai-action">✨ AI Phân Tích & Tự Điền Ô</button>
-    </div>
-
-    <form id="booking-form">
-      <input type="hidden" id="editing-id" value="">
-
-      <div class="form-group">
-        <label>Tên khách</label>
-        <input type="text" id="input-name" placeholder="Tên khách hàng...">
-      </div>
-
-      <div class="form-group">
-        <label>Số điện thoại</label>
-        <input type="text" id="input-phone" placeholder="Số điện thoại...">
-      </div>
-
-      <div class="form-row form-group">
-        <div class="form-col">
-          <label>Ngày hẹn</label>
-          <input type="date" id="input-date">
-        </div>
-        <div class="form-col">
-          <label>Giờ hẹn</label>
-          <input type="time" id="input-time">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Dịch vụ</label>
-        <input type="text" id="input-service" placeholder="Làm móng, cắt da, sơn gel...">
-      </div>
-
-      <div class="form-group">
-        <label>Ghi chú</label>
-        <input type="text" id="input-note" placeholder="Yêu cầu đặc biệt...">
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn-cancel" id="btn-reset">Huỷ / Làm mới</button>
-        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu Lên Firebase</button>
-      </div>
-    </form>
-  </div>
-
-  <div class="card">
-    <div class="list-header">
-      <div>
-        <h2>Danh Sách Lịch Hẹn</h2>
-        <span class="status-cloud" id="cloud-status">☁️ Đang kết nối Firebase...</span>
-      </div>
-      <span class="badge-count" id="appt-count">0 lịch hẹn</span>
-    </div>
-
-    <div class="filter-bar">
-      <input type="text" id="search-input" placeholder="🔍 Tìm Tên / SĐT...">
-      <input type="date" id="filter-date" title="Lọc xem lịch theo ngày">
-      <button type="button" class="btn-reset-filter" id="btn-clear-filter">Xem Tất Cả Lịch</button>
-    </div>
-    
-    <div id="appointment-list">
-      <div class="empty-msg">Đang tải dữ liệu từ Firebase...</div>
+  <!-- BANNER NGÀY -->
+  <div class="date-banner">
+    <div class="big-day" id="banner-day-num">--</div>
+    <div>
+      <div class="date-details" id="banner-day-name">Thứ --</div>
+      <div class="sub-date" id="banner-month-year">Tháng --, ----</div>
     </div>
   </div>
-</div>
+
+  <!-- TAB NAVIGATION -->
+  <div class="tab-nav">
+    <div class="tab-item active" onclick="switchTab('day')">Ngày</div>
+    <div class="tab-item" onclick="switchTab('week')">Tuần</div>
+    <div class="tab-item" onclick="switchTab('month')">Tháng</div>
+  </div>
+
+  <!-- BỌC ĐIỀU HƯỚNG NGÀY -->
+  <div class="day-nav">
+    <button class="nav-btn" onclick="changeDate(-1)">❮</button>
+    <div class="current-view-title" id="view-title">--/--</div>
+    <button class="btn-today" onclick="goToday()">Hôm nay</button>
+    <button class="nav-btn" onclick="changeDate(1)">❯</button>
+  </div>
+
+  <!-- DANH SÁCH LỊCH HẸN -->
+  <div class="calendar-content" id="calendar-content">
+    <div class="empty-state">
+      <h3>Chưa có lịch hẹn</h3>
+      <p>Bấm "+ Khách mới" để thêm lịch cho ngày này</p>
+    </div>
+  </div>
+
+  <!-- NÚT BẤM THÊM KHÁCH MỚI GÓC DƯỚI -->
+  <button class="btn-float-add" onclick="openModal()">
+    <span>+</span> Khách mới
+  </button>
+
+  <!-- MODAL / FORM NHẬP LIỆU GIAO DIỆN MẪU -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <div class="drag-handle"></div>
+      <div class="modal-title" id="modal-form-title">Thêm khách hẹn</div>
+
+      <form id="modal-form">
+        <input type="hidden" id="editing-id" value="">
+
+        <div class="form-group">
+          <label>Tên khách</label>
+          <input type="text" id="input-name" placeholder="Ví dụ: Maria" oninput="handleAIInput(this.value)">
+          <div class="hint-text">Mẹo: bấm 🎙️ trên bàn phím iPhone để nói thay vì gõ</div>
+        </div>
+
+        <div class="form-group">
+          <label>Số điện thoại</label>
+          <input type="text" id="input-phone" placeholder="612 123 456">
+        </div>
+
+        <div class="form-row form-group">
+          <div class="form-col">
+            <label>Ngày</label>
+            <input type="date" id="input-date">
+          </div>
+          <div class="form-col">
+            <label>Giờ</label>
+            <input type="time" id="input-time">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dịch vụ</label>
+          <input type="text" id="input-service" placeholder="Refill Acrylic + French">
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú</label>
+          <textarea id="input-note" rows="2" placeholder="Ghi chú thêm..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-modal-cancel" onclick="closeModal()">Huỷ</button>
+          <button type="submit" class="btn-modal-save">Lưu lịch hẹn</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
 <script>
-function getTodayStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+  let selectedDate = new Date();
+  window.currentSelectedDate = formatDateStr(selectedDate);
 
-// CHỈNH SỬA LỊCH HẸN
-window.editItem = function(docId) {
-  const item = window.globalAppointments.find(a => a.docId === docId);
-  if (!item) return;
+  function formatDateStr(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
-  document.getElementById('editing-id').value = item.docId;
-  document.getElementById('input-name').value = item.name;
-  document.getElementById('input-phone').value = item.phone;
-  document.getElementById('input-date').value = item.date;
-  document.getElementById('input-time').value = item.time;
-  document.getElementById('input-service').value = item.service;
-  document.getElementById('input-note').value = item.note || '';
+  function updateHeaderBanner() {
+    const daysName = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    document.getElementById('banner-day-num').innerText = selectedDate.getDate();
+    document.getElementById('banner-day-name').innerText = daysName[selectedDate.getDay()];
+    document.getElementById('banner-month-year').innerText = `Tháng ${selectedDate.getMonth() + 1}, ${selectedDate.getFullYear()}`;
+    
+    const dayShort = selectedDate.getDay() === 0 ? 'CN' : `T${selectedDate.getDay() + 1}`;
+    document.getElementById('view-title').innerText = `${dayShort}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`;
+    
+    window.currentSelectedDate = formatDateStr(selectedDate);
+    renderAppointments();
+  }
 
-  document.getElementById('form-title').innerText = "📝 Chỉnh sửa lịch hẹn";
-  document.getElementById('btn-submit-label').innerText = "Cập Nhật Firebase";
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
+  function changeDate(days) {
+    selectedDate.setDate(selectedDate.getDate() + days);
+    updateHeaderBanner();
+  }
 
-// HIỂN THỊ DANH SÁCH & LỌC THEO NGÀY
-function renderList() {
-  const keyword = document.getElementById('search-input').value.toLowerCase().trim();
-  const dateVal = document.getElementById('filter-date').value;
+  function goToday() {
+    selectedDate = new Date();
+    updateHeaderBanner();
+  }
 
-  const filtered = (window.globalAppointments || []).filter(item => {
-    const matchKw = (item.name || '').toLowerCase().includes(keyword) || (item.phone || '').includes(keyword);
-    const matchDate = dateVal ? item.date === dateVal : true;
-    return matchKw && matchDate;
+  function renderAppointments() {
+    const container = document.getElementById('calendar-content');
+    const targetDate = window.currentSelectedDate;
+
+    const list = (window.globalAppointments || []).filter(item => item.date === targetDate);
+
+    if (list.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <h3>Chưa có lịch hẹn</h3>
+          <p>Bấm "+ Khách mới" để thêm lịch cho ngày này</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = list.map(item => `
+      <div class="appt-card">
+        <div>
+          <span class="appt-time">⏰ ${item.time}</span>
+          <div class="appt-name">${item.name} ${item.phone ? `- <span class="appt-phone">${item.phone}</span>` : ''}</div>
+          <div class="appt-service">💅 ${item.service} ${item.note ? `| 📝 ${item.note}` : ''}</div>
+        </div>
+        <div class="appt-actions">
+          <button class="btn-edit-act" onclick="editItem('${item.docId}')">Sửa</button>
+          <button class="btn-del-act" onclick="deleteItem('${item.docId}')">Xoá</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  // MODAL FUNCTIONS
+  function openModal() {
+    document.getElementById('modal-form').reset();
+    document.getElementById('editing-id').value = '';
+    document.getElementById('input-date').value = window.currentSelectedDate;
+    document.getElementById('input-time').value = "09:00";
+    document.getElementById('modal-form-title').innerText = "Thêm khách hẹn";
+    document.getElementById('modal-overlay').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  window.editItem = function(docId) {
+    const item = window.globalAppointments.find(a => a.docId === docId);
+    if (!item) return;
+
+    document.getElementById('editing-id').value = item.docId;
+    document.getElementById('input-name').value = item.name;
+    document.getElementById('input-phone').value = item.phone || '';
+    document.getElementById('input-date').value = item.date;
+    document.getElementById('input-time').value = item.time;
+    document.getElementById('input-service').value = item.service;
+    document.getElementById('input-note').value = item.note || '';
+
+    document.getElementById('modal-form-title').innerText = "Chỉnh sửa lịch hẹn";
+    document.getElementById('modal-overlay').classList.add('active');
+  };
+
+  // AI TỰ ĐIỀN THÔNG TIN KHI GÕ/NÓI VÀO TÊN KHÁCH
+  function handleAIInput(val) {
+    if (!val || val.length < 8) return;
+    
+    // Tự động tách Số điện thoại nếu nói cả câu
+    const phoneMatch = val.match(/(0\d{8,10}|\d{3}\s\d{3}\s\d{3})/);
+    if (phoneMatch) {
+      document.getElementById('input-phone').value = phoneMatch[0];
+    }
+
+    // Tự động tách Giờ
+    const timeMatch = val.match(/(\d{1,2}(?:[:h]\d{2}|h)?)/i);
+    if (timeMatch && timeMatch[0].length >= 2) {
+      let t = timeMatch[0].toLowerCase().replace('h', ':');
+      if (!t.includes(':')) t += ':00';
+      const parts = t.split(':');
+      const formattedTime = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
+      document.getElementById('input-time').value = formattedTime;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    updateHeaderBanner();
   });
-
-  document.getElementById('appt-count').innerText = `${filtered.length} lịch hẹn`;
-  const container = document.getElementById('appointment-list');
-
-  if (filtered.length === 0) {
-    const today = getTodayStr();
-    let msg = 'Chưa có lịch hẹn nào.';
-    if (dateVal === today) {
-      msg = 'Hôm nay chưa có lịch hẹn nào.';
-    } else if (dateVal) {
-      msg = `Không có lịch hẹn cho ngày ${dateVal}`;
-    }
-    container.innerHTML = `<div class="empty-msg">${msg}</div>`;
-    return;
-  }
-
-  container.innerHTML = filtered.map(item => `
-    <div class="appointment-item">
-      <div class="appt-info">
-        <span class="appt-time">📅 ${item.date} | ⏰ ${item.time}</span>
-        <h4>👤 ${item.name} - 📞 ${item.phone}</h4>
-        <p>💅 <strong>Dịch vụ:</strong> ${item.service}</p>
-        ${item.note ? `<p>📝 <strong>Ghi chú:</strong> ${item.note}</p>` : ''}
-      </div>
-      <div class="item-actions">
-        <button class="btn-edit" onclick="editItem('${item.docId}')">Sửa</button>
-        <button class="btn-delete" onclick="deleteItem('${item.docId}')">Xoá</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// AI PHÂN TÍCH TỰ ĐIỀN (CÓ NHẬN DIỆN NGÀY THÁNG NÂNG CAO)
-document.getElementById('btn-ai-action').addEventListener('click', function() {
-  const text = document.getElementById('ai-input').value.trim();
-  if (!text) return;
-
-  let raw = text;
-  let phone = '', time = '', name = '', service = '';
-  let dateStr = '';
-
-  // 1. Phân tích Số điện thoại
-  const phoneMatch = raw.match(/(0\d{5,10})/);
-  if (phoneMatch) { 
-    phone = phoneMatch[0]; 
-    raw = raw.replace(phone, ''); 
-  }
-
-  // 2. Phân tích Ngày tháng
-  const today = new Date();
-  
-  if (/ngay mai|ngày mai|hom sau|hôm sau/i.test(raw)) {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dateStr = tomorrow.toISOString().split('T')[0];
-    raw = raw.replace(/ngay mai|ngày mai|hom sau|hôm sau/gi, '');
-  } else if (/hom nay|hôm nay/i.test(raw)) {
-    dateStr = getTodayStr();
-    raw = raw.replace(/hom nay|hôm nay/gi, '');
-  } else {
-    // Tìm kiểu ngày/tháng: "15/9", "15-9", "ngay 15 thang 9", "ngay 15"
-    const fullDateMatch = raw.match(/(?:ngay|ngày)?\s*(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{4}))?/i);
-    const dayOnlyMatch = raw.match(/(?:ngay|ngày)\s*(\d{1,2})/i);
-
-    if (fullDateMatch) {
-      const d = fullDateMatch[1].padStart(2, '0');
-      const m = fullDateMatch[2].padStart(2, '0');
-      const y = fullDateMatch[3] || today.getFullYear();
-      dateStr = `${y}-${m}-${d}`;
-      raw = raw.replace(fullDateMatch[0], '');
-    } else if (dayOnlyMatch) {
-      const d = dayOnlyMatch[1].padStart(2, '0');
-      const m = String(today.getMonth() + 1).padStart(2, '0');
-      const y = today.getFullYear();
-      dateStr = `${y}-${m}-${d}`;
-      raw = raw.replace(dayOnlyMatch[0], '');
-    }
-  }
-
-  // 3. Phân tích Giờ hẹn
-  const timeMatch = raw.match(/(\d{1,2}(?:[:h]\d{2}|h)?)/i);
-  if (timeMatch) {
-    let t = timeMatch[0].toLowerCase().replace('h', ':');
-    if (!t.includes(':')) t += ':00';
-    const parts = t.split(':');
-    time = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
-    raw = raw.replace(timeMatch[0], '');
-  }
-
-  // 4. Phân tích Tên và Dịch vụ từ đoạn còn lại
-  let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|dt|đt|làm|lam|ngày|ngay)/gi, '').replace(/\s+/g, ' ').trim();
-  const words = clean.split(' ');
-  if (words.length > 0) {
-    name = words[0];
-    service = words.slice(1).join(' ');
-  }
-
-  // Điền dữ liệu phân tích vào các ô
-  document.getElementById('input-name').value = name;
-  document.getElementById('input-phone').value = phone;
-  document.getElementById('input-time').value = time;
-  document.getElementById('input-service').value = service;
-  document.getElementById('input-date').value = dateStr || getTodayStr();
-});
-
-function resetForm() {
-  document.getElementById('booking-form').reset();
-  document.getElementById('editing-id').value = '';
-  document.getElementById('ai-input').value = '';
-  document.getElementById('form-title').innerText = "Thêm lịch hẹn mới";
-  document.getElementById('btn-submit-label').innerText = "Lưu Lên Firebase";
-  document.getElementById('input-date').value = getTodayStr();
-}
-
-document.getElementById('btn-reset').addEventListener('click', resetForm);
-document.getElementById('search-input').addEventListener('input', renderList);
-document.getElementById('filter-date').addEventListener('change', renderList);
-
-// Bấm "Xem Tất Cả Lịch" -> Bỏ lọc ngày để xem toàn bộ
-document.getElementById('btn-clear-filter').addEventListener('click', function() {
-  document.getElementById('search-input').value = '';
-  document.getElementById('filter-date').value = '';
-  renderList();
-});
-
-// KHI TRANG KHỞI CHẠY: MẶC ĐỊNH LỌC THEO NGÀY HÔM NAY
-window.addEventListener('DOMContentLoaded', function() {
-  const today = getTodayStr();
-  document.getElementById('input-date').value = today;
-  document.getElementById('filter-date').value = today; // Mặc định chỉ lọc ngày hôm nay
-});
 </script>
 
 </body>
