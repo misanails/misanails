@@ -586,13 +586,44 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Gọi Gemini AI với cơ chế Auto-Fallback và xử lý lỗi nâng cao
+// Tự động truy vấn danh sách model hiện có từ Google API
+async function getAvailableGeminiModels(apiKey) {
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data.models) return [];
+
+    // Tự lọc các model hỗ trợ generateContent và xếp ưu tiên phiên bản mới nhất
+    return data.models
+      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''))
+      .sort((a, b) => b.localeCompare(a));
+  } catch (e) {
+    console.warn("Không thể tự động dò danh sách Model, sử dụng danh sách tĩnh:", e);
+    return [];
+  }
+}
+
+// Gọi Gemini AI với cơ chế Tự Động Dò Model (Auto-Discovery) & Dự Phòng Linh Hoạt
 async function fetchGeminiAI(promptText, apiKey) {
-  // Danh sách các model chạy cực nhanh và chuẩn xác (Đã loại bỏ hoàn toàn gemini-1.5-pro bị lỗi)
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
+  // 1. Tự dò tìm model khả dụng từ tài khoản người dùng
+  const dynamicModels = await getAvailableGeminiModels(apiKey);
+  
+  // 2. Danh sách tĩnh dự phòng trong trường hợp không truy vấn được ListModels
+  const fallbackModels = [
+    'gemini-3.1-pro-preview',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-flash'
+  ];
+
+  // Hợp nhất hai danh sách và loại bỏ các model trùng lặp
+  const modelsToTry = Array.from(new Set([...dynamicModels, ...fallbackModels]));
   let lastError = null;
 
-  for (const model of models) {
+  for (const model of modelsToTry) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
@@ -616,7 +647,7 @@ async function fetchGeminiAI(promptText, apiKey) {
       if (text) return text;
     } catch (err) {
       lastError = err;
-      console.warn(`Model ${model} không khả dụng, đang chuyển model kế tiếp...`, err);
+      console.warn(`Model ${model} không khả dụng, đang chuyển model tiếp theo...`, err);
     }
   }
   throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
@@ -655,7 +686,7 @@ Văn bản: "${text}"`;
   try {
     const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
 
-    // Lọc lấy nội dung JSON kể cả khi AI vô tình trả thêm các chuỗi text thừa
+    // Lọc lấy nội dung JSON kể cả khi AI trả thêm text thừa
     const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
