@@ -68,7 +68,7 @@
     .drag-handle { width: 36px; height: 4px; background: #E2D8CE; border-radius: 2px; margin: 0 auto 12px; }
     .modal-title { font-size: 16px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
 
-    /* KHUNG AI NHẬP NHANH (MỚI THÊM LẠI ĐẸP MẮT) */
+    /* KHUNG CÔNG CỤ AI */
     .ai-box { background: #F3ECE5; border: 1px dashed #D5C7BC; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
     .ai-header { font-size: 11px; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
     .ai-input-wrapper { display: flex; gap: 8px; }
@@ -209,11 +209,11 @@
       <div class="drag-handle"></div>
       <div class="modal-title" id="modal-form-title">Thêm khách hẹn</div>
 
-      <!-- KHUNG CÔNG CỤ AI TỰ ĐỘNG PHÂN TÍCH -->
+      <!-- KHUNG CÔNG CỤ AI NHẬP NHANH -->
       <div class="ai-box">
-        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH / NÓI TỰ DO</div>
+        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Bao gồm Ngày/Tháng)</div>
         <div class="ai-input-wrapper">
-          <input type="text" id="ai-smart-input" placeholder="Ví dụ: Maria 0912345678 làm refill lúc 2h chiều" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <input type="text" id="ai-smart-input" placeholder="VD: Maria 0912345678 làm refill thứ 2 tuần sau 2h chiều" onkeyup="if(event.key==='Enter') runAIParsing()">
           <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Phân tích AI</button>
         </div>
       </div>
@@ -362,21 +362,63 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // CÔNG CỤ AI XỬ LÝ PHÂN TÍCH
+  // CÔNG CỤ AI NÂNG CẤP PHÂN TÍCH CẢ NGÀY THÁNG
   function runAIParsing() {
     const val = document.getElementById('ai-smart-input').value.trim();
     if (!val) return;
 
-    let name = val;
+    let text = val.toLowerCase();
+    let parsedDate = new Date(); // Mặc định là hôm nay
 
-    // 1. Phân tích Số điện thoại
+    // 1. Phân tích NGÀY / THÁNG
+    let dateFound = false;
+
+    // Nhận diện ngày cụ thể: 15/10, 15/10/2026, 15-10
+    const specificDateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?/);
+    if (specificDateMatch) {
+      let d = parseInt(specificDateMatch[1], 10);
+      let m = parseInt(specificDateMatch[2], 10) - 1;
+      let y = specificDateMatch[3] ? parseInt(specificDateMatch[3], 10) : parsedDate.getFullYear();
+      parsedDate = new Date(y, m, d);
+      dateFound = true;
+    }
+
+    if (!dateFound) {
+      if (text.includes("ngày mai") || text.includes("mai")) {
+        parsedDate.setDate(parsedDate.getDate() + 1);
+      } else if (text.includes("ngày kia") || text.includes("mốt")) {
+        parsedDate.setDate(parsedDate.getDate() + 2);
+      } else if (text.includes("tháng sau") || text.includes("tháng tới")) {
+        parsedDate.setMonth(parsedDate.getMonth() + 1);
+      } else {
+        // Nhận diện thứ trong tuần (Thứ 2 đến Thứ 7, Chủ Nhật)
+        const dayMap = { "chủ nhật": 0, "cn": 0, "thứ 2": 1, "thứ hai": 1, "t2": 1, "thứ 3": 2, "thứ ba": 2, "t3": 2, "thứ 4": 3, "thứ tư": 3, "t4": 3, "thứ 5": 4, "thứ năm": 4, "t5": 4, "thứ 6": 5, "thứ sáu": 5, "t6": 5, "thứ 7": 6, "thứ bảy": 6, "t7": 6 };
+        for (let key in dayMap) {
+          if (text.includes(key)) {
+            let targetDay = dayMap[key];
+            let currentDay = parsedDate.getDay();
+            let distance = targetDay - currentDay;
+            if (distance <= 0) distance += 7; // Lấy thứ của tuần kế tiếp nếu trùng ngày đã qua
+            if (text.includes("tuần sau")) distance += 7;
+            parsedDate.setDate(parsedDate.getDate() + distance);
+            break;
+          }
+        }
+      }
+    }
+
+    // Cập nhật ô Ngày trên Form
+    document.getElementById('input-date').value = formatDateStr(parsedDate);
+
+    // 2. Phân tích SỐ ĐIỆN THOẠI
+    let nameClean = val;
     const phoneMatch = val.match(/(0\d{8,10}|\d{3}[\s.-]?\d{3}[\s.-]?\d{3,4})/);
     if (phoneMatch) {
       document.getElementById('input-phone').value = phoneMatch[0];
-      name = name.replace(phoneMatch[0], '');
+      nameClean = nameClean.replace(phoneMatch[0], '');
     }
 
-    // 2. Phân tích Giờ
+    // 3. Phân tích GIỜ HẸN
     let isPM = /chiều|tối|pm/i.test(val);
     const timeMatch = val.match(/(\d{1,2})(?:[:h](\d{2}))?\s*(g|giờ|h|pm|am)?/i);
     if (timeMatch) {
@@ -387,23 +429,23 @@
       if (hours >= 0 && hours <= 23) {
         document.getElementById('input-time').value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
       }
-      name = name.replace(timeMatch[0], '');
+      nameClean = nameClean.replace(timeMatch[0], '');
     }
 
-    // 3. Phân tích Dịch vụ
+    // 4. Phân tích DỊCH VỤ
     const servicesKeywords = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "sơn gel", "cắt da", "móng úp"];
     for (let service of servicesKeywords) {
       if (val.toLowerCase().includes(service)) {
         document.getElementById('input-service').value = service.charAt(0).toUpperCase() + service.slice(1);
-        name = name.replace(new RegExp(service, 'gi'), '');
+        nameClean = nameClean.replace(new RegExp(service, 'gi'), '');
         break;
       }
     }
 
-    // Làm sạch từ dư thừa để lấy Tên khách
-    name = name.replace(/làm|lúc|chiều|tối|ngày|giờ|hôn|hôm nay/gi, '').trim();
-    if (name) {
-      document.getElementById('input-name').value = name;
+    // Xóa bớt các từ chỉ thời gian thừa để trích xuất TÊN KHÁCH
+    nameClean = nameClean.replace(/ngày mai|ngày kia|mốt|mai|thứ \d|chủ nhật|tuần sau|tháng tới|tháng sau|làm|lúc|chiều|tối|ngày|giờ|hôn|hôm nay/gi, '').trim();
+    if (nameClean) {
+      document.getElementById('input-name').value = nameClean;
     }
   }
 
