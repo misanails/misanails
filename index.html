@@ -62,11 +62,18 @@
     /* MODAL BOTTOM SHEET */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; justify-content: flex-end; flex-direction: column; z-index: 100; backdrop-filter: blur(2px); }
     .modal-overlay.active { display: flex; }
-    .modal-content { background: var(--bg-color); border-radius: 20px 20px 0 0; padding: 12px 20px 24px; width: 100%; max-width: 600px; margin: 0 auto; max-height: 88vh; overflow-y: auto; box-shadow: 0 -8px 30px rgba(0,0,0,0.12); animation: slideUp 0.22s ease-out; }
+    .modal-content { background: var(--bg-color); border-radius: 20px 20px 0 0; padding: 12px 20px 24px; width: 100%; max-width: 600px; margin: 0 auto; max-height: 90vh; overflow-y: auto; box-shadow: 0 -8px 30px rgba(0,0,0,0.12); animation: slideUp 0.22s ease-out; }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
     .drag-handle { width: 36px; height: 4px; background: #E2D8CE; border-radius: 2px; margin: 0 auto 12px; }
-    .modal-title { font-size: 16px; font-weight: 800; color: var(--text-dark); margin-bottom: 14px; }
+    .modal-title { font-size: 16px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
+
+    /* KHUNG AI NHẬP NHANH (MỚI THÊM LẠI ĐẸP MẮT) */
+    .ai-box { background: #F3ECE5; border: 1px dashed #D5C7BC; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
+    .ai-header { font-size: 11px; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+    .ai-input-wrapper { display: flex; gap: 8px; }
+    .ai-input-wrapper input { flex: 1; padding: 8px 10px; border: 1px solid #E0D4C8; border-radius: 6px; font-size: 12px; background: #FFF; outline: none; }
+    .btn-ai-parse { background: var(--primary-color); color: #FFF; border: none; padding: 0 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
@@ -74,7 +81,6 @@
     .form-group input:focus, .form-group textarea:focus { border-color: var(--primary-color); }
     .form-row { display: flex; gap: 10px; }
     .form-col { flex: 1; }
-    .hint-text { font-size: 10px; color: #A0948A; margin-top: 4px; }
 
     .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
     .btn-modal-cancel { flex: 1; background: #FFF; border: 1px solid #E5DCD3; padding: 12px; border-radius: 8px; font-weight: 700; color: #665E57; cursor: pointer; text-align: center; font-size: 13px; }
@@ -203,13 +209,21 @@
       <div class="drag-handle"></div>
       <div class="modal-title" id="modal-form-title">Thêm khách hẹn</div>
 
+      <!-- KHUNG CÔNG CỤ AI TỰ ĐỘNG PHÂN TÍCH -->
+      <div class="ai-box">
+        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH / NÓI TỰ DO</div>
+        <div class="ai-input-wrapper">
+          <input type="text" id="ai-smart-input" placeholder="Ví dụ: Maria 0912345678 làm refill lúc 2h chiều" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Phân tích AI</button>
+        </div>
+      </div>
+
       <form id="modal-form">
         <input type="hidden" id="editing-id" value="">
 
         <div class="form-group">
-          <label>Tên khách / Nhập câu nói AI</label>
-          <input type="text" id="input-name" placeholder="Ví dụ: Maria 0912345678 refill 2h chiều" oninput="handleAIInput(this.value)">
-          <div class="hint-text">Mẹo: Bấm 🎙️ trên bàn phím để nói, AI sẽ tự điền giờ, SĐT & dịch vụ!</div>
+          <label>Tên khách</label>
+          <input type="text" id="input-name" placeholder="Ví dụ: Maria">
         </div>
 
         <div class="form-group">
@@ -295,7 +309,6 @@
       return;
     }
 
-    // Sắp xếp lịch hẹn theo giờ tăng dần
     list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
     container.innerHTML = list.map(item => `
@@ -321,6 +334,7 @@
   // MODAL LOGIC
   function openModal() {
     document.getElementById('modal-form').reset();
+    document.getElementById('ai-smart-input').value = '';
     document.getElementById('editing-id').value = '';
     document.getElementById('input-date').value = window.currentSelectedDate;
     document.getElementById('input-time').value = "09:00";
@@ -348,38 +362,48 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // BỘ XỬ LÝ AI TỰ ĐỘNG BÓC TÁCH THÔNG TIN
-  function handleAIInput(val) {
-    if (!val || val.length < 5) return;
-    
-    // 1. Tách số điện thoại
+  // CÔNG CỤ AI XỬ LÝ PHÂN TÍCH
+  function runAIParsing() {
+    const val = document.getElementById('ai-smart-input').value.trim();
+    if (!val) return;
+
+    let name = val;
+
+    // 1. Phân tích Số điện thoại
     const phoneMatch = val.match(/(0\d{8,10}|\d{3}[\s.-]?\d{3}[\s.-]?\d{3,4})/);
     if (phoneMatch) {
       document.getElementById('input-phone').value = phoneMatch[0];
+      name = name.replace(phoneMatch[0], '');
     }
 
-    // 2. Tách giờ hẹn (Ví dụ: 2h, 2h30, 14:00, 2pm, 2 giờ chiều)
+    // 2. Phân tích Giờ
     let isPM = /chiều|tối|pm/i.test(val);
     const timeMatch = val.match(/(\d{1,2})(?:[:h](\d{2}))?\s*(g|giờ|h|pm|am)?/i);
-    
     if (timeMatch) {
       let hours = parseInt(timeMatch[1], 10);
       let minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
 
       if (isPM && hours < 12) hours += 12;
       if (hours >= 0 && hours <= 23) {
-        const formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        document.getElementById('input-time').value = formattedTime;
+        document.getElementById('input-time').value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
       }
+      name = name.replace(timeMatch[0], '');
     }
 
-    // 3. Tách từ khóa dịch vụ phổ biến
+    // 3. Phân tích Dịch vụ
     const servicesKeywords = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "sơn gel", "cắt da", "móng úp"];
     for (let service of servicesKeywords) {
       if (val.toLowerCase().includes(service)) {
         document.getElementById('input-service').value = service.charAt(0).toUpperCase() + service.slice(1);
+        name = name.replace(new RegExp(service, 'gi'), '');
         break;
       }
+    }
+
+    // Làm sạch từ dư thừa để lấy Tên khách
+    name = name.replace(/làm|lúc|chiều|tối|ngày|giờ|hôn|hôm nay/gi, '').trim();
+    if (name) {
+      document.getElementById('input-name').value = name;
     }
   }
 
