@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SỔ LỊCH NAIL / AGENDA DE UÑAS</title>
+  <title>AGENDA DE UÑAS</title>
   <style>
     :root {
       --primary-color: #A8324A;
@@ -23,7 +23,7 @@
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
     
-    /* NÚT ĐỔI NGÔN NGỮ & NÚT CHỌN LỊCH */
+    /* NÚT THAO TÁC HEADER */
     .btn-action-top { background: #EFE4DC; border: 1px solid #D5C7BC; border-radius: 14px; padding: 5px 10px; font-size: 11px; font-weight: 700; color: var(--primary-color); cursor: pointer; display: flex; align-items: center; gap: 4px; }
     .btn-action-top:active { background: #E0D4C8; }
 
@@ -90,8 +90,8 @@
     .btn-modal-cancel { flex: 1; background: #FFF; border: 1px solid #E5DCD3; padding: 12px; border-radius: 8px; font-weight: 700; color: #665E57; cursor: pointer; text-align: center; font-size: 13px; }
     .btn-modal-save { flex: 1; background: var(--primary-color); border: none; padding: 12px; border-radius: 8px; font-weight: 700; color: #FFF; cursor: pointer; text-align: center; font-size: 13px; }
 
-    /* ẨN INPUT NATIVE CALENDAR PICKER */
-    #hidden-date-picker { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+    /* INPUT AN/KÍCH HOẠT CHỌN LỊCH */
+    #hidden-date-picker { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
   </style>
 
   <!-- Firebase JS SDK -->
@@ -130,12 +130,15 @@
       e.preventDefault();
       
       const docId = document.getElementById('editing-id').value;
+      const defaultName = currentLang === 'vi' ? 'Khách không tên' : 'Cliente sin nombre';
+      const defaultService = currentLang === 'vi' ? 'Dịch vụ Nail' : 'Servicio de Uñas';
+
       const itemData = {
-        name: document.getElementById('input-name').value.trim() || (currentLang === 'vi' ? 'Khách không tên' : 'Cliente sin nombre'),
+        name: document.getElementById('input-name').value.trim() || defaultName,
         phone: document.getElementById('input-phone').value.trim() || '',
         date: document.getElementById('input-date').value || window.currentSelectedDate,
         time: document.getElementById('input-time').value || '09:00',
-        service: document.getElementById('input-service').value.trim() || 'Nail Service',
+        service: document.getElementById('input-service').value.trim() || defaultService,
         note: document.getElementById('input-note').value.trim() || ''
       };
 
@@ -147,17 +150,17 @@
         }
         closeModal();
       } catch (err) {
-        alert('Lỗi / Error: ' + err.message);
+        alert((currentLang === 'vi' ? 'Lỗi: ' : 'Error: ') + err.message);
       }
     });
 
     window.deleteItem = async function(docId) {
-      const msg = currentLang === 'vi' ? 'Bạn có chắc chắn muốn xoá lịch hẹn này?' : '¿Estás seguro de eliminarlo?';
+      const msg = currentLang === 'vi' ? 'Bạn có chắc chắn muốn xoá lịch hẹn này?' : '¿Estás seguro de que deseas eliminar esta cita?';
       if (confirm(msg)) {
         try {
           await deleteDoc(doc(db, "appointments", docId));
         } catch (err) {
-          alert('Error!');
+          alert(currentLang === 'vi' ? 'Không thể xoá lịch!' : '¡No se pudo eliminar!');
         }
       }
     };
@@ -169,17 +172,17 @@
   <header>
     <div class="logo-title" id="txt-app-title">SỔ LỊCH NAIL</div>
     <div class="header-actions">
-      <!-- NÚT XEM LỊCH ĐỂ CLICK CHỌN NGÀY -->
+      <!-- NÚT CHỌN LỊCH NGÀY CŨ / MỚI -->
       <button class="btn-action-top" onclick="openDatePicker()">
         📅 <span id="txt-btn-picker">Xem lịch</span>
       </button>
 
-      <!-- NÚT THAY ĐỔI NGÔN NGỮ (VI / ES) -->
+      <!-- NÚT CHUYỂN ĐỔI NGÔN NGỮ (VI / ES) -->
       <button class="btn-action-top" id="btn-lang-toggle" onclick="toggleLanguage()">
-        🌐 VI | ES
+        🌐 ES
       </button>
 
-      <!-- INPUT NGẦM CHỌN NGÀY -->
+      <!-- INPUT AN ĐỂ KÍCH HOẠT LỊCH -->
       <input type="date" id="hidden-date-picker" onchange="onDateSelectedFromPicker(this.value)">
     </div>
   </header>
@@ -216,7 +219,7 @@
     </div>
   </div>
 
-  <!-- FLOATING BUTTON (+ KHÁCH MỚI) -->
+  <!-- FLOATING BUTTON (+ KHÁCH MỚI / NUEVO CLIENTE) -->
   <button class="btn-float-add" onclick="openModal()">
     <span>+</span> <span id="txt-btn-add">Khách mới</span>
   </button>
@@ -231,7 +234,7 @@
       <div class="ai-box">
         <div class="ai-header" id="txt-ai-title">✨ CÔNG CỤ AI NHẬP NHANH</div>
         <div class="ai-input-wrapper">
-          <input type="text" id="ai-smart-input" placeholder="Mai điện thoại 889988 hẹn vào lúc 03.20" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <input type="text" id="ai-smart-input" placeholder="" onkeyup="if(event.key==='Enter') runAIParsing()">
           <button type="button" class="btn-ai-parse" id="txt-btn-ai" onclick="runAIParsing()">Phân tích AI</button>
         </div>
       </div>
@@ -281,9 +284,9 @@
 <script>
   let selectedDate = new Date();
   window.currentSelectedDate = formatDateStr(selectedDate);
-  let currentLang = 'vi'; // Mặc định Tiếng Việt ('vi' hoặc 'es')
+  let currentLang = 'vi'; // Mặc định 'vi' hoặc 'es'
 
-  // BỘ TỪ ĐIỂN ĐA NGÔN NGỮ (VI / ES)
+  // BỘ TỪ ĐIỂN TIẾNG VIỆT & TIẾNG TÂY BAN NHA CHUẨN 100%
   const i18n = {
     vi: {
       appTitle: "SỔ LỊCH NAIL",
@@ -310,36 +313,40 @@
       btnSave: "Lưu lịch hẹn",
       btnEdit: "Sửa",
       btnDelete: "Xoá",
+      langBtn: "🌐 ES",
       daysName: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'],
-      monthsName: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+      monthsName: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
+      dayPrefix: "T"
     },
     es: {
       appTitle: "AGENDA DE UÑAS",
-      btnPicker: "Ver Lịch",
+      btnPicker: "Ver Calendario",
       btnToday: "Hoy",
       tabDay: "Día",
       tabWeek: "Semana",
       tabMonth: "Mes",
       emptyTitle: "Sin citas programadas",
-      emptySub: "Haz clic en \"+ Cita Nueva\" para agregar",
-      btnAdd: "Cita Nueva",
-      modalAddTitle: "Agregar nueva cita",
-      modalEditTitle: "Editar cita",
-      aiTitle: "✨ HERRAMIENTA IA RÁPIDA",
+      emptySub: "Toca \"+ Nueva Cita\" para agregar clientes en este día",
+      btnAdd: "Nueva Cita",
+      modalAddTitle: "Agregar Nueva Cita",
+      modalEditTitle: "Editar Cita",
+      aiTitle: "✨ ASISTENTE RÁPIDO IA",
       aiBtn: "Analizar IA",
-      aiPlaceholder: "Mañana teléfono 889988 a las 15.20",
-      lblName: "Nombre del cliente",
-      lblPhone: "Teléfono",
+      aiPlaceholder: "Mañana teléfono 612123456 cita a las 15:30",
+      lblName: "Nombre del Cliente",
+      lblPhone: "Número de Teléfono",
       lblDate: "Fecha",
       lblTime: "Hora",
-      lblService: "Servicio",
-      lblNote: "Notas",
+      lblService: "Servicio de Uñas",
+      lblNote: "Notas / Observaciones",
       btnCancel: "Cancelar",
-      btnSave: "Guardar cita",
+      btnSave: "Guardar Cita",
       btnEdit: "Editar",
       btnDelete: "Eliminar",
+      langBtn: "🌐 VI",
       daysName: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-      monthsName: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+      monthsName: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+      dayPrefix: "Dí"
     }
   };
 
@@ -350,14 +357,18 @@
     return `${year}-${month}-${day}`;
   }
 
-  // MỞ CỬA SỔ CHỌN NGÀY LỊCH
+  // MỞ LỊCH TRỰC QUAN ĐỂ LỰA CHỌN NGÀY CŨ / MỚI
   function openDatePicker() {
     const hiddenPicker = document.getElementById('hidden-date-picker');
     hiddenPicker.value = window.currentSelectedDate;
-    hiddenPicker.showPicker ? hiddenPicker.showPicker() : hiddenPicker.click();
+    if (hiddenPicker.showPicker) {
+      hiddenPicker.showPicker();
+    } else {
+      hiddenPicker.click();
+    }
   }
 
-  // KHI NGƯỜI DÙNG CHỌN NGÀY TỪ LỊCH DOWN
+  // KHI NGƯỜI DÙNG CHỌN NGÀY BẤM TỪ CALENDAR POPUP
   function onDateSelectedFromPicker(val) {
     if (!val) return;
     const parts = val.split('-');
@@ -365,7 +376,7 @@
     updateHeaderBanner();
   }
 
-  // CHUYỂN ĐỔI NGÔN NGỮ (VI <-> ES)
+  // CHUYỂN ĐỔI TOÀN BỘ NGÔN NGỮ (VI <-> ES)
   function toggleLanguage() {
     currentLang = currentLang === 'vi' ? 'es' : 'vi';
     applyLanguage();
@@ -393,7 +404,7 @@
     document.getElementById('lbl-note').innerText = lang.lblNote;
     document.getElementById('txt-btn-cancel').innerText = lang.btnCancel;
     document.getElementById('txt-btn-save').innerText = lang.btnSave;
-    document.getElementById('btn-lang-toggle').innerText = currentLang === 'vi' ? '🌐 VI | ES' : '🌐 ES | VI';
+    document.getElementById('btn-lang-toggle').innerText = lang.langBtn;
 
     updateHeaderBanner();
   }
@@ -404,7 +415,13 @@
     document.getElementById('banner-day-name').innerText = lang.daysName[selectedDate.getDay()];
     document.getElementById('banner-month-year').innerText = `${lang.monthsName[selectedDate.getMonth()]}, ${selectedDate.getFullYear()}`;
     
-    const dayShort = selectedDate.getDay() === 0 ? (currentLang === 'vi' ? 'CN' : 'Dom') : (currentLang === 'vi' ? `T${selectedDate.getDay() + 1}` : `L${selectedDate.getDay()}`);
+    let dayShort = '';
+    if (currentLang === 'vi') {
+      dayShort = selectedDate.getDay() === 0 ? 'CN' : `T${selectedDate.getDay() + 1}`;
+    } else {
+      const shortDaysES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      dayShort = shortDaysES[selectedDate.getDay()];
+    }
     document.getElementById('view-title').innerText = `${dayShort}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`;
     
     window.currentSelectedDate = formatDateStr(selectedDate);
@@ -491,7 +508,7 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // PHÂN TÍCH AI THÔNG MINH
+  // PHÂN TÍCH VĂN BẢN THÔNG MINH AI
   function runAIParsing() {
     let str = document.getElementById('ai-smart-input').value.trim();
     if (!str) return;
@@ -502,14 +519,14 @@
     let targetMonth = now.getMonth();
     let targetDay = now.getDate();
 
-    // 1. SỐ ĐIỆN THOẠI
+    // 1. LẤY SỐ ĐIỆN THOẠI
     let phoneMatch = workingStr.match(/\b\d{4,11}\b/);
     if (phoneMatch) {
       document.getElementById('input-phone').value = phoneMatch[0];
       workingStr = workingStr.replace(phoneMatch[0], ' ');
     }
 
-    // 2. GIỜ HẸN
+    // 2. LẤY GIỜ HẸN
     let isPM = /chiều|tối|pm|tarde|noche/i.test(workingStr);
     let timeMatch = workingStr.match(/(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am|hs)/i);
     
@@ -523,7 +540,7 @@
       workingStr = workingStr.replace(timeMatch[0], ' ');
     }
 
-    // 3. NGÀY HẸN
+    // 3. LẤY NGÀY
     if (/ngày mai|mai|mañana/i.test(workingStr)) {
       targetDay = now.getDate() + 1;
       workingStr = workingStr.replace(/ngày mai|mai|mañana/gi, ' ');
@@ -539,8 +556,8 @@
     let resultDateObj = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resultDateObj);
 
-    // 4. DỊCH VỤ
-    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "uñas"];
+    // 4. LẤY DỊCH VỤ NAIL
+    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "uñas", "relleno"];
     let foundService = "";
     for (let s of servicesList) {
       if (new RegExp('\\b' + s + '\\b', 'i').test(workingStr)) {
@@ -549,11 +566,11 @@
         break;
       }
     }
-    document.getElementById('input-service').value = foundService || "Nail Service";
+    document.getElementById('input-service').value = foundService || (currentLang === 'vi' ? 'Dịch vụ Nail' : 'Servicio de Uñas');
 
-    // 5. TÊN KHÁCH
+    // 5. TÁCH TÊN KHÁCH
     let cleanName = workingStr
-      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|hẹn|vào|lúc|chiều|tối|sáng|hôm|nay|teléfono|telefono|hora|a las|con/gi, ' ')
+      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|hẹn|vào|lúc|chiều|tối|sáng|hôm|nay|teléfono|telefono|hora|a las|con|cita/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
