@@ -211,9 +211,9 @@
 
       <!-- KHUNG CÔNG CỤ AI NHẬP NHANH -->
       <div class="ai-box">
-        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Smart Parser)</div>
+        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Smart Parser v3)</div>
         <div class="ai-input-wrapper">
-          <input type="text" id="ai-smart-input" placeholder="Điện thoại 9999 Hằng vào 08.30 ngày 07" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <input type="text" id="ai-smart-input" placeholder="Mai điện thoại 889988 hẹn vào lúc 03.20" onkeyup="if(event.key==='Enter') runAIParsing()">
           <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Phân tích AI</button>
         </div>
       </div>
@@ -361,38 +361,35 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // CÔNG CỤ AI THÔNG MINH TÁCH CHÍNH XÁC TỪNG Ô
+  // HÀM AI BÓC TÁCH NÂNG CẤP V3
   function runAIParsing() {
-    let rawStr = document.getElementById('ai-smart-input').value.trim();
-    if (!rawStr) return;
+    let str = document.getElementById('ai-smart-input').value.trim();
+    if (!str) return;
 
-    let workingStr = rawStr;
+    let workingStr = str;
     let now = new Date();
     let targetYear = now.getFullYear();
     let targetMonth = now.getMonth();
     let targetDay = now.getDate();
 
-    // 1. TÁCH SỐ ĐIỆN THOẠI (Bao gồm số 4 chữ số hoặc số dài)
-    let phoneFound = "";
-    // Bắt các cụm như: "điện thoại 9999", "dt 9999", "sđt 0912345678" hoặc chuỗi số độc lập
-    let phonePattern = /(?:điện\s*thoại|dt|sdt|phone|st)\s*[:.-]?\s*(\d{4,11})|(\b0\d{8,10}\b|\b\d{8,11}\b)/i;
-    let phoneMatch = workingStr.match(phonePattern);
-    
+    // 1. TÁCH SỐ ĐIỆN THOẠI (4 số trở lên)
+    let phoneMatch = workingStr.match(/\b\d{4,11}\b/);
     if (phoneMatch) {
-      phoneFound = phoneMatch[1] || phoneMatch[2];
-      document.getElementById('input-phone').value = phoneFound;
-      // Cắt bỏ cụm số điện thoại khỏi chuỗi phân tích
+      document.getElementById('input-phone').value = phoneMatch[0];
       workingStr = workingStr.replace(phoneMatch[0], ' ');
+    } else {
+      document.getElementById('input-phone').value = '';
     }
 
-    // 2. TÁCH GIỜ (Ví dụ: 08.30, 8h30, 8:30, 2h chiều, 14h)
-    let timePattern = /(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am)/i;
-    let timeMatch = workingStr.match(timePattern);
+    // 2. TÁCH GIỜ (03.20, 3h20, 15:30, 3.20pm, 3g30...)
     let isPM = /chiều|tối|pm/i.test(workingStr);
-
+    let timeMatch = workingStr.match(/(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am)/i);
+    
     if (timeMatch) {
       let h = parseInt(timeMatch[1] || timeMatch[3], 10);
       let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+
+      // Nếu dưới 12h và có chữ 'chiều'/'tối' hoặc là giờ hẹn cá nhân thông thường
       if (isPM && h < 12) h += 12;
       
       if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
@@ -401,30 +398,29 @@
       workingStr = workingStr.replace(timeMatch[0], ' ');
     }
 
-    // 3. TÁCH NGÀY / THÁNG
-    // Ưu tiên khớp: "ngày 07", "ngày 7/9", "07/09"
-    let datePattern = /(?:ngày\s*)?(\d{1,2})(?:[\/\-](\d{1,2}))?(?:[\/\-](\d{4}))?/i;
-    let dayMatch = workingStr.match(/(?:ngày|ngay)\s*(\d{1,2})/i);
-    
-    if (dayMatch) {
-      targetDay = parseInt(dayMatch[1], 10);
-      // Nếu ngày hẹn nhỏ hơn ngày hiện tại, tự hiểu là sang tháng tiếp theo
-      if (targetDay < now.getDate()) {
-        targetMonth += 1;
-      }
-      workingStr = workingStr.replace(dayMatch[0], ' ');
+    // 3. TÁCH NGÀY / THÁNG (Mai, Ngày kia, Ngày xx, xx/yy)
+    if (/ngày mai|mai/i.test(workingStr)) {
+      targetDay = now.getDate() + 1;
+      workingStr = workingStr.replace(/ngày mai|mai/gi, ' ');
+    } else if (/ngày kia|mốt/i.test(workingStr)) {
+      targetDay = now.getDate() + 2;
+      workingStr = workingStr.replace(/ngày kia|mốt/gi, ' ');
     } else {
-      let slashDateMatch = workingStr.match(/(\d{1,2})[\/\-](\d{1,2})/);
-      if (slashDateMatch) {
-        targetDay = parseInt(slashDateMatch[1], 10);
-        targetMonth = parseInt(slashDateMatch[2], 10) - 1;
-        workingStr = workingStr.replace(slashDateMatch[0], ' ');
-      } else if (/mai|ngày mai/i.test(workingStr)) {
-        targetDay = now.getDate() + 1;
-        workingStr = workingStr.replace(/ngày mai|mai/gi, ' ');
+      let dayMatch = workingStr.match(/(?:ngày|ngay)\s*(\d{1,2})/i);
+      if (dayMatch) {
+        targetDay = parseInt(dayMatch[1], 10);
+        if (targetDay < now.getDate()) targetMonth += 1;
+        workingStr = workingStr.replace(dayMatch[0], ' ');
+      } else {
+        let slashMatch = workingStr.match(/(\d{1,2})[\/\-](\d{1,2})/);
+        if (slashMatch) {
+          targetDay = parseInt(slashMatch[1], 10);
+          targetMonth = parseInt(slashMatch[2], 10) - 1;
+          workingStr = workingStr.replace(slashMatch[0], ' ');
+        }
       }
     }
-
+    
     let resultDateObj = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resultDateObj);
 
@@ -438,21 +434,19 @@
         break;
       }
     }
-    if (foundService) {
-      document.getElementById('input-service').value = foundService;
-    }
+    document.getElementById('input-service').value = foundService || "Dịch vụ Nail";
 
-    // 5. LÀM SẠCH CÒN LẠI ĐỂ LẤY TÊN KHÁCH
-    // Loại bỏ các hư từ tiếng Việt nối câu
+    // 5. LÀM SẠCH VĂN BẢN THỪA ĐỂ BẢO TỒN TÊN KHÁCH
     let cleanName = workingStr
-      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|vào|lúc|chiều|tối|sáng|hôm|nay|châm|làm/gi, ' ')
+      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|hẹn|vào|lúc|chiều|tối|sáng|hôm|nay|châm|làm/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
-    // Chữ hoa đầu từ cho Tên
     if (cleanName) {
       cleanName = cleanName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       document.getElementById('input-name').value = cleanName;
+    } else {
+      document.getElementById('input-name').value = "Khách Hẹn";
     }
   }
 
