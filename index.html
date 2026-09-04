@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misa Nails - Quản Lý & Xem Lịch Sử Hẹn</title>
+  <title>Misa Nails - Quản Lý Lịch Hẹn Cloud</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     body { background-color: #f7f4f0; padding: 25px 15px; color: #333; }
@@ -12,14 +12,12 @@
     .card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f0e2d3; }
     h2 { font-size: 20px; font-weight: 700; color: #2a2017; margin-bottom: 18px; }
     
-    /* VÙNG AI */
     .ai-box { background-color: #f7ede1; border: 1px dashed #d8b88d; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
     .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
     .ai-textarea { width: 100%; padding: 10px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; color: #333; }
     .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
     .btn-ai:hover { background: #b0881e; }
     
-    /* FORM FORM */
     .form-group { margin-bottom: 16px; }
     .form-row { display: flex; gap: 12px; }
     .form-col { flex: 1; }
@@ -27,14 +25,13 @@
     input { width: 100%; padding: 10px 12px; border: 1px solid #e8e2da; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
     input:focus { border-color: #c59b27; }
 
-    .toast { display: none; background: #222; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; text-align: center; margin-bottom: 12px; float: right; }
-    .actions { display: flex; gap: 12px; margin-top: 20px; clear: both; }
+    .actions { display: flex; gap: 12px; margin-top: 20px; }
     .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
     .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
 
-    /* LỌC & XEM LỊCH SỬ HÔM TRƯỚC */
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .badge-count { background: #f7ede1; color: #a37233; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; }
+    .status-cloud { font-size: 12px; color: #2e7d32; font-weight: 600; display: block; margin-top: 4px; }
     
     .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
     .filter-bar input[type="text"] { flex: 2; min-width: 180px; }
@@ -55,18 +52,16 @@
 <body>
 
 <div class="container">
-  
-  <!-- KHOẢNG 1: FORM ĐIỀN THÔNG TIN LỊCH HẸN -->
   <div class="card">
     <h2 id="form-title">Thêm khách hẹn</h2>
 
     <div class="ai-box">
       <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ TỰ DO ĐỂ AI TỰ ĐIỀN Ô:</span>
       <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="minh dt 090909090 hen 12h28 lam chan nuoc"></textarea>
-      <button type="button" class="btn-ai" onclick="handleSmartAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
+      <button type="button" class="btn-ai" id="btn-ai-action">✨ AI Phân Tích & Tự Điền Ô</button>
     </div>
 
-    <form id="booking-form" onsubmit="saveAppointment(event)">
+    <form id="booking-form">
       <input type="hidden" id="editing-id" value="">
 
       <div class="form-group">
@@ -100,83 +95,107 @@
         <input type="text" id="input-note" placeholder="...">
       </div>
 
-      <div id="toast-msg" class="toast">✨ AI đã phân tích và điền xong!</div>
-
       <div class="actions">
-        <button type="button" class="btn-cancel" onclick="resetForm()">Huỷ</button>
-        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu Lịch Hẹn</button>
+        <button type="button" class="btn-cancel" id="btn-reset">Huỷ</button>
+        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu Đồng Bộ Cloud</button>
       </div>
     </form>
   </div>
 
-  <!-- KHOẢNG 2: DANH SÁCH LỊCH HẸN & LỊCH SỬ CÁC HÔM TRƯỚC -->
   <div class="card">
     <div class="list-header">
-      <h2>Lịch sử & Danh sách hẹn</h2>
+      <div>
+        <h2>Lịch sử & Danh sách hẹn</h2>
+        <span class="status-cloud" id="cloud-status">☁️ Đang kết nối Cloud...</span>
+      </div>
       <span class="badge-count" id="appt-count">0 lịch hẹn</span>
     </div>
 
-    <!-- TÌM KIẾM VÀ LỌC THEO NGÀY -->
     <div class="filter-bar">
-      <input type="text" id="search-input" placeholder="🔍 Tìm Tên / SĐT..." oninput="renderAppointments()">
-      <input type="date" id="filter-date" onchange="renderAppointments()" title="Lọc xem theo ngày">
-      <button type="button" class="btn-reset-filter" onclick="clearFilter()">Xem Tất Cả</button>
+      <input type="text" id="search-input" placeholder="🔍 Tìm Tên / SĐT...">
+      <input type="date" id="filter-date">
+      <button type="button" class="btn-reset-filter" id="btn-clear-filter">Xem Tất Cả</button>
     </div>
     
     <div id="appointment-list">
-      <div class="empty-msg">Chưa có lịch hẹn nào.</div>
+      <div class="empty-msg">Đang tải dữ liệu từ Cloud...</div>
     </div>
   </div>
-
 </div>
 
 <script>
-// --- 1. QUẢN LÝ LƯU TRỮ VĨNH VIỄN (LOCALSTORAGE - F5 KHÔNG MẤT) ---
-const STORAGE_KEY = "misanails_permanent_db";
+// CẤU HÌNH CLOUD VỚI THÔNG TIN CỦA BẠN
+const BIN_ID = "6a9b00deda38895dfe396730"; 
+const API_KEY = "$2a$10$00.fYq60TlguOMR0w9QPCu0Odh85Dw.kN.Hyb5c4BXq8LXOwf3/ey";
 
-function getAppointments() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+let globalAppointments = [];
+
+// TẢI DỮ LIỆU TỪ CLOUD
+async function fetchFromCloud() {
+  document.getElementById('cloud-status').innerText = "🔄 Đang đồng bộ...";
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+      headers: { "X-Master-Key": API_KEY }
+    });
+    const data = await res.json();
+    globalAppointments = Array.isArray(data.record.appointments) ? data.record.appointments : (Array.isArray(data.record) ? data.record : []);
+    document.getElementById('cloud-status').innerText = "🟢 Đã đồng bộ tất cả thiết bị";
+    renderList();
+  } catch (err) {
+    document.getElementById('cloud-status').innerText = "🔴 Lỗi đồng bộ Cloud!";
+  }
 }
 
-function saveToStorage(list) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+// LƯU DỮ LIỆU LÊN CLOUD
+async function saveToCloud(newList) {
+  document.getElementById('cloud-status').innerText = "⏳ Đang lưu Cloud...";
+  try {
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": API_KEY
+      },
+      body: JSON.stringify({ appointments: newList })
+    });
+    globalAppointments = newList;
+    document.getElementById('cloud-status').innerText = "🟢 Đã lưu thành công";
+    renderList();
+  } catch (err) {
+    alert("❌ Lỗi khi lưu lên Cloud!");
+  }
 }
 
-// --- 2. LƯU & SỬA LỊCH HẸN ---
-function saveAppointment(event) {
-  event.preventDefault();
-
+// LƯU / SỬA FORM
+document.getElementById('booking-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
   const editId = document.getElementById('editing-id').value;
-  let list = getAppointments();
+  let list = [...globalAppointments];
 
-  const apptData = {
+  const itemData = {
     id: editId ? Number(editId) : Date.now(),
-    name: document.getElementById('input-name').value || 'Khách không tên',
-    phone: document.getElementById('input-phone').value || 'Chưa có SĐT',
+    name: document.getElementById('input-name').value.trim() || 'Khách không tên',
+    phone: document.getElementById('input-phone').value.trim() || 'Chưa có SĐT',
     date: document.getElementById('input-date').value || new Date().toISOString().split('T')[0],
     time: document.getElementById('input-time').value || '--:--',
-    service: document.getElementById('input-service').value || 'Dịch vụ chung',
-    note: document.getElementById('input-note').value || ''
+    service: document.getElementById('input-service').value.trim() || 'Dịch vụ chung',
+    note: document.getElementById('input-note').value.trim() || ''
   };
 
   if (editId) {
-    list = list.map(item => item.id === Number(editId) ? apptData : item);
-    alert('✅ Cập nhật thành công!');
+    list = list.map(item => item.id === Number(editId) ? itemData : item);
   } else {
-    list.unshift(apptData);
-    alert('✅ Đã lưu vĩnh viễn thành công!');
+    list.unshift(itemData);
   }
 
-  saveToStorage(list);
+  await saveToCloud(list);
   resetForm();
-  renderAppointments();
-}
+  alert('✅ Đã lưu thành công! Mọi thiết bị khác mở lên sẽ có lịch này ngay.');
+});
 
-// --- 3. ĐỔ DỮ LIỆU ĐỂ SỬA (EDIT) ---
-function editAppointment(id) {
-  const list = getAppointments();
-  const item = list.find(a => a.id === id);
+window.editItem = function(id) {
+  const item = globalAppointments.find(a => a.id === id);
   if (!item) return;
 
   document.getElementById('editing-id').value = item.id;
@@ -188,40 +207,32 @@ function editAppointment(id) {
   document.getElementById('input-note').value = item.note || '';
 
   document.getElementById('form-title').innerText = "Chỉnh sửa lịch hẹn";
-  document.getElementById('btn-submit-label').innerText = "Cập nhật";
-
+  document.getElementById('btn-submit-label').innerText = "Cập nhật Lên Cloud";
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+};
 
-// --- 4. XOÁ LỊCH HẸN ---
-function deleteAppointment(id) {
-  if (confirm('Bạn có chắc chắn muốn xoá lịch hẹn này?')) {
-    let list = getAppointments().filter(item => item.id !== id);
-    saveToStorage(list);
-    renderAppointments();
+window.deleteItem = async function(id) {
+  if (confirm('Xoá lịch hẹn này trên mọi thiết bị?')) {
+    let list = globalAppointments.filter(item => item.id !== id);
+    await saveToCloud(list);
   }
-}
+};
 
-// --- 5. HIỂN THỊ VÀ LỌC LỊCH SỬ CÁC HÔM TRƯỚC ---
-function renderAppointments() {
-  const list = getAppointments();
-  const keyword = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
-  const selectedDate = document.getElementById('filter-date')?.value;
-  
-  const container = document.getElementById('appointment-list');
-  const countEl = document.getElementById('appt-count');
+function renderList() {
+  const keyword = document.getElementById('search-input').value.toLowerCase().trim();
+  const dateVal = document.getElementById('filter-date').value;
 
-  // Lọc theo Tên/SĐT và Lọc theo Ngày chọn
-  const filtered = list.filter(item => {
-    const matchKey = item.name.toLowerCase().includes(keyword) || item.phone.includes(keyword);
-    const matchDate = selectedDate ? item.date === selectedDate : true;
-    return matchKey && matchDate;
+  const filtered = globalAppointments.filter(item => {
+    const matchKw = item.name.toLowerCase().includes(keyword) || item.phone.includes(keyword);
+    const matchDate = dateVal ? item.date === dateVal : true;
+    return matchKw && matchDate;
   });
 
-  countEl.innerText = `${filtered.length} lịch hẹn`;
+  document.getElementById('appt-count').innerText = `${filtered.length} lịch hẹn`;
+  const container = document.getElementById('appointment-list');
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-msg">${selectedDate ? 'Không có lịch hẹn nào trong ngày ' + selectedDate : 'Chưa có lịch hẹn nào.'}</div>`;
+    container.innerHTML = `<div class="empty-msg">${dateVal ? 'Không có lịch hẹn ngày ' + dateVal : 'Chưa có lịch hẹn nào.'}</div>`;
     return;
   }
 
@@ -234,77 +245,69 @@ function renderAppointments() {
         ${item.note ? `<p>📝 <strong>Ghi chú:</strong> ${item.note}</p>` : ''}
       </div>
       <div class="item-actions">
-        <button class="btn-edit" onclick="editAppointment(${item.id})">Sửa</button>
-        <button class="btn-delete" onclick="deleteAppointment(${item.id})">Xoá</button>
+        <button class="btn-edit" onclick="editItem(${item.id})">Sửa</button>
+        <button class="btn-delete" onclick="deleteItem(${item.id})">Xoá</button>
       </div>
     </div>
   `).join('');
 }
 
-function clearFilter() {
-  document.getElementById('search-input').value = '';
-  document.getElementById('filter-date').value = '';
-  renderAppointments();
-}
-
-// --- 6. AI PHÂN TÍCH TỰ ĐỘNG ---
-function handleSmartAnalysis() {
+// AI PHÂN TÍCH TỰ ĐIỀN
+document.getElementById('btn-ai-action').addEventListener('click', function() {
   const text = document.getElementById('ai-input').value.trim();
   if (!text) return;
 
-  const result = { name: '', phone: '', time: '', service: '' };
   let raw = text;
+  let phone = '', time = '', name = '', service = '';
 
   const phoneMatch = raw.match(/(0\d{5,10})/);
-  if (phoneMatch) { result.phone = phoneMatch[0]; raw = raw.replace(result.phone, ''); }
+  if (phoneMatch) { phone = phoneMatch[0]; raw = raw.replace(phone, ''); }
 
   const timeMatch = raw.match(/(\d{1,2}(?:[:h]\d{2}|h)?)/i);
   if (timeMatch) {
     let t = timeMatch[0].toLowerCase().replace('h', ':');
     if (!t.includes(':')) t += ':00';
     const parts = t.split(':');
-    result.time = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
+    time = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
     raw = raw.replace(timeMatch[0], '');
   }
 
   let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|dt|đt|làm|lam)/gi, '').replace(/\s+/g, ' ').trim();
   const words = clean.split(' ');
   if (words.length > 0) {
-    result.name = words[0];
-    result.service = words.slice(1).join(' ');
+    name = words[0];
+    service = words.slice(1).join(' ');
   }
 
-  const fill = (id, val) => {
-    if (!val) return;
-    const el = document.getElementById(id);
-    if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
-  };
-
-  fill('input-name', result.name);
-  fill('input-phone', result.phone);
-  fill('input-time', result.time);
-  fill('input-service', result.service);
-
-  const dateEl = document.getElementById('input-date');
-  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
-
-  const toast = document.getElementById('toast-msg');
-  toast.style.display = 'block';
-  setTimeout(() => { toast.style.display = 'none'; }, 2000);
-}
+  document.getElementById('input-name').value = name;
+  document.getElementById('input-phone').value = phone;
+  document.getElementById('input-time').value = time;
+  document.getElementById('input-service').value = service;
+  
+  if (!document.getElementById('input-date').value) {
+    document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+  }
+});
 
 function resetForm() {
   document.getElementById('booking-form').reset();
   document.getElementById('editing-id').value = '';
   document.getElementById('ai-input').value = '';
   document.getElementById('form-title').innerText = "Thêm khách hẹn";
-  document.getElementById('btn-submit-label').innerText = "Lưu Lịch Hẹn";
+  document.getElementById('btn-submit-label').innerText = "Lưu Đồng Bộ Cloud";
 }
 
-// Tự động tải dữ liệu khi vừa mở hoặc F5 lại trang
-window.onload = function() {
-  renderAppointments();
-};
+document.getElementById('btn-reset').addEventListener('click', resetForm);
+document.getElementById('search-input').addEventListener('input', renderList);
+document.getElementById('filter-date').addEventListener('change', renderList);
+document.getElementById('btn-clear-filter').addEventListener('click', function() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('filter-date').value = '';
+  renderList();
+});
+
+// TẢI LỊCH MỚI KHI MỞ TRANG
+window.addEventListener('DOMContentLoaded', fetchFromCloud);
 </script>
 
 </body>
