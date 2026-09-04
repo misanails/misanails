@@ -135,9 +135,24 @@
   .sheet{ background:var(--bg); width:100%; max-height:88vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px 28px; }
   .sheet .grabber{ width:36px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px; }
   .sheet h2{ font-size:22px; margin:0 0 16px; font-weight:600;}
+  
+  /* AI BOX STYLE */
+  .ai-box {
+    background: var(--gold-soft);
+    border: 1px dashed var(--gold);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .ai-box label { font-size: 12px; font-weight: 700; color: var(--gold); display: block; margin-bottom: 6px; }
+  .ai-box textarea { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 14px; font-family: inherit; }
+  .ai-box button {
+    margin-top: 8px; width: 100%; padding: 10px; background: var(--gold); color: white;
+    border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
+  }
+
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
-  .field .hint{ font-size:11px; color:var(--gold); font-weight:500; margin-top:4px;}
   .field input, .field textarea, .field select{
     width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
     background:var(--surface); font-size:15.5px; color:var(--ink); font-family:inherit;
@@ -228,10 +243,17 @@
   <div class="sheet">
     <div class="grabber"></div>
     <h2 id="sheetTitle" class="serif">Thêm khách hẹn</h2>
+    
+    <!-- KHU VỰC GEMINI AI -->
+    <div class="ai-box">
+      <label>✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ GEMINI ĐIỀN Ô TỰ ĐỘNG:</label>
+      <textarea id="aiInput" placeholder="VD: Maria SĐT 0412345678 hẹn 2 giờ chiều ngày mai làm Refill Acrylic"></textarea>
+      <button id="aiParseBtn">✨ Gemini Phân Tích & Tự Điền Ô</button>
+    </div>
+
     <div class="field">
       <label>Tên khách</label>
       <input type="text" id="fName" placeholder="Ví dụ: Maria">
-      <div class="hint">Mẹo: bấm 🎙️ trên bàn phím iPhone để nói thay vì gõ</div>
     </div>
     <div class="field">
       <label>Số điện thoại</label>
@@ -300,7 +322,7 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 1800);
+  setTimeout(()=> t.classList.remove('show'), 2000);
 }
 
 function updateHeader(){
@@ -515,6 +537,7 @@ function openSheet(id){
   editingId = id || null;
   const overlay = document.getElementById('overlay');
   const title = document.getElementById('sheetTitle');
+  document.getElementById('aiInput').value = '';
   if(id){
     const a = appts.find(x=>x.id===id);
     title.textContent = 'Sửa lịch hẹn';
@@ -545,6 +568,61 @@ document.getElementById('fabAdd').addEventListener('click', ()=> openSheet(null)
 document.getElementById('cancelBtn').addEventListener('click', closeSheet);
 document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
+});
+
+// TÍCH HỢP GEMINI AI XỬ LÝ NGÔN NGỮ TỰ NHIÊN
+document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('aiInput').value.trim();
+  if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
+
+  const btn = document.getElementById('aiParseBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Gemini đang xử lý...';
+
+  const todayStr = dateKey(new Date());
+
+  const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý sắp xếp lịch tiệm Nail. 
+Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành JSON chuẩn duy nhất (không có bất kỳ lời giải thích hay ký tự thừa nào) theo cấu trúc:
+{
+  "name": "Tên khách",
+  "phone": "Số điện thoại nếu có",
+  "date": "Định dạng YYYY-MM-DD",
+  "time": "Định dạng HH:MM 24h",
+  "service": "Tên dịch vụ làm đẹp",
+  "note": "Ghi chú thêm nếu có"
+}
+Văn bản đầu vào: "${text}"`;
+
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + window.firebaseConfig?.apiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }]
+      })
+    });
+
+    const data = await response.json();
+    let reply = data.candidates[0].content.parts[0].text;
+    reply = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const parsed = JSON.parse(reply);
+
+    if(parsed.name) document.getElementById('fName').value = parsed.name;
+    if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
+    if(parsed.date) document.getElementById('fDate').value = parsed.date;
+    if(parsed.time) document.getElementById('fTime').value = parsed.time;
+    if(parsed.service) document.getElementById('fService').value = parsed.service;
+    if(parsed.note) document.getElementById('fNote').value = parsed.note;
+
+    showToast('✨ Gemini đã điền xong!');
+  } catch(e) {
+    console.error("Lỗi Gemini API:", e);
+    showToast('Lỗi AI phân tích, hãy thử lại!');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Gemini Phân Tích & Tự Điền Ô';
+  }
 });
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
