@@ -23,7 +23,7 @@
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
     
-    /* BOTÓN VER CALENDARIO PARI DI DỘNG */
+    /* BOTÓN VER CALENDARIO PARA DI DỘNG */
     .btn-action-top-wrapper {
       position: relative;
       display: inline-block;
@@ -40,7 +40,7 @@
       display: flex; 
       align-items: center; 
       gap: 4px; 
-      pointer-events: none; /* Tránh cản trở chạm vào input phía trên */
+      pointer-events: none;
     }
 
     .btn-action-top-wrapper input[type="date"] {
@@ -60,16 +60,16 @@
     .date-details { font-size: 12px; color: var(--primary-color); font-weight: 600; line-height: 1.2; }
     .sub-date { font-size: 11px; color: var(--text-muted); font-weight: 400; }
 
-    /* TAB NAV */
+    /* TAB NAV (CHỈ CÒN HOY VÀ MAÑANA) */
     .tab-nav { display: flex; background: var(--bg-color); border-bottom: 1px solid var(--border-color); }
-    .tab-item { flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
+    .tab-item { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
     .tab-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
 
     /* DAY CONTROLLER */
     .day-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--bg-color); }
-    .nav-btn { width: 24px; height: 24px; border-radius: 50%; border: none; background: #EFE4DC; color: #665E57; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .nav-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: #EFE4DC; color: #665E57; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; }
     .current-view-title { font-size: 13px; font-weight: 700; color: var(--text-dark); }
-    .btn-today { background: transparent; border: 1px solid #E2D7CD; border-radius: 12px; padding: 3px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .btn-today { background: transparent; border: 1px solid #E2D7CD; border-radius: 12px; padding: 4px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
 
     /* CALENDAR CONTENT AREA */
     .calendar-content { flex: 1; padding: 15px 20px 100px; display: flex; flex-direction: column; }
@@ -139,6 +139,7 @@
 
     window.globalAppointments = [];
 
+    // TẢI TOÀN BỘ DỮ LIỆU TỪ LỚN ĐẾN BÉ ĐỂ LƯU TRỮ VĨNH VIỄN
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
@@ -193,7 +194,7 @@
   <header>
     <div class="logo-title">AGENDA DE UÑAS</div>
     <div class="header-actions">
-      <!-- NÚT MỞ LỊCH ĐÃ ĐƯỢC TỐI ƯU TRỰC TIẾP CHO DI ĐỘNG -->
+      <!-- BOTÓN VER CALENDARIO -->
       <div class="btn-action-top-wrapper">
         <button class="btn-action-top">
           📅 <span>Ver Calendario</span>
@@ -212,11 +213,10 @@
     </div>
   </div>
 
-  <!-- TAB NAV -->
+  <!-- TAB NAV (CHỈ CÒN HOY VÀ MAÑANA) -->
   <div class="tab-nav">
-    <div class="tab-item active" id="tab-day" onclick="switchTab(this)">Día</div>
-    <div class="tab-item" id="tab-week" onclick="switchTab(this)">Semana</div>
-    <div class="tab-item" id="tab-month" onclick="switchTab(this)">Mes</div>
+    <div class="tab-item active" id="tab-hoy" onclick="selectQuickTab('hoy')">Hoy</div>
+    <div class="tab-item" id="tab-manana" onclick="selectQuickTab('manana')">Mañana</div>
   </div>
 
   <!-- DAY NAV CONTROLLER -->
@@ -319,6 +319,32 @@
     updateHeaderBanner();
   }
 
+  function selectQuickTab(tab) {
+    const today = new Date();
+    if (tab === 'hoy') {
+      selectedDate = today;
+    } else if (tab === 'manana') {
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      selectedDate = tomorrow;
+    }
+    updateHeaderBanner();
+  }
+
+  function syncTabHighlight() {
+    const todayStr = formatDateStr(new Date());
+    const tomorrowStr = formatDateStr(new Date(Date.now() + 86400000));
+    
+    document.getElementById('tab-hoy').classList.remove('active');
+    document.getElementById('tab-manana').classList.remove('active');
+
+    if (window.currentSelectedDate === todayStr) {
+      document.getElementById('tab-hoy').classList.add('active');
+    } else if (window.currentSelectedDate === tomorrowStr) {
+      document.getElementById('tab-manana').classList.add('active');
+    }
+  }
+
   function updateHeaderBanner() {
     document.getElementById('banner-day-num').innerText = selectedDate.getDate();
     document.getElementById('banner-day-name').innerText = daysNameES[selectedDate.getDay()];
@@ -329,6 +355,8 @@
     
     window.currentSelectedDate = formatDateStr(selectedDate);
     document.getElementById('top-date-picker').value = window.currentSelectedDate;
+    
+    syncTabHighlight();
     renderAppointments();
   }
 
@@ -372,11 +400,6 @@
         </div>
       </div>
     `).join('');
-  }
-
-  function switchTab(el) {
-    document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
-    el.classList.add('active');
   }
 
   function openModal() {
