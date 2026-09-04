@@ -166,8 +166,8 @@
 
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
-    background:var(--ink); color:#fff; padding:10px 18px; border-radius:20px; font-size:13px;
-    z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; max-width: 85%; text-align: center;
+    background:var(--ink); color:#fff; padding:12px 20px; border-radius:20px; font-size:13px;
+    z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; max-width: 90%; text-align: center; word-break: break-word;
   }
   .toast.show{ opacity:1; }
 </style>
@@ -319,11 +319,11 @@ function initFirebaseListener(){
   });
 }
 
-function showToast(msg){
+function showToast(msg, duration = 4000){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 3500);
+  setTimeout(()=> t.classList.remove('show'), duration);
 }
 
 function updateHeader(){
@@ -534,10 +534,10 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
-// Cấu hình Key tùy chỉnh qua Nút Bánh Răng (⚙️)
+// Cấu hình Key Gemini
 document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
   const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
-  const inputKey = prompt("Dán API Key copy từ Google AI Studio vào đây:", currentKey);
+  const inputKey = prompt("Dán API Key copy từ Google AI Studio (aistudio.google.com) vào đây:", currentKey);
   
   if (inputKey !== null) {
     const trimmed = inputKey.trim().replace(/[\r\n\s]/g, '');
@@ -587,7 +587,7 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Xử lý AI Phân Tích (Sử dụng Model Mới Nhất)
+// Xử lý AI Phân Tích (Báo lỗi chi tiết trực tiếp)
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
@@ -596,7 +596,7 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const geminiApiKey = rawKey ? rawKey.trim().replace(/[\r\n\s]/g, '') : '';
 
   if(!geminiApiKey){
-    showToast('⚠️ Vui lòng bấm ⚙️ góc trên để nhập API Key');
+    showToast('⚠️ Nhấp vào biểu tượng ⚙️ ở góc trên để dán API Key');
     return;
   }
 
@@ -606,70 +606,58 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
 
   const todayStr = dateKey(new Date());
 
-  const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý sắp xếp lịch tiệm Nail. 
-Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành chuỗi JSON duy nhất (không chứa ký tự mã hóa markdown) theo cấu trúc:
+  const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý xếp lịch tiệm Nail.
+Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn:
 {
   "name": "Tên khách",
-  "phone": "Số điện thoại nếu có",
-  "date": "Định dạng YYYY-MM-DD",
-  "time": "Định dạng HH:MM 24h",
-  "service": "Tên dịch vụ làm đẹp",
-  "note": "Ghi chú thêm nếu có"
+  "phone": "Số điện thoại",
+  "date": "YYYY-MM-DD",
+  "time": "HH:MM",
+  "service": "Tên dịch vụ",
+  "note": "Ghi chú"
 }
-Văn bản đầu vào: "${text}"`;
+Văn bản: "${text}"`;
 
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-  let success = false;
-  let lastError = '';
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }]
+      })
+    });
 
-  for(const model of models){
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: promptText }]
-          }],
-          generationConfig: {
-            response_mime_type: "application/json"
-          }
-        })
-      });
+    const data = await response.json();
 
-      const data = await response.json();
-
-      if(!response.ok){
-        throw new Error(data.error?.message || `Lỗi ${response.status}`);
-      }
-
-      const reply = data.candidates[0].content.parts[0].text.trim();
-      const parsed = JSON.parse(reply);
-
-      if(parsed.name) document.getElementById('fName').value = parsed.name;
-      if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
-      if(parsed.date) document.getElementById('fDate').value = parsed.date;
-      if(parsed.time) document.getElementById('fTime').value = parsed.time;
-      if(parsed.service) document.getElementById('fService').value = parsed.service;
-      if(parsed.note) document.getElementById('fNote').value = parsed.note;
-
-      showToast('✨ AI đã phân tích và điền dữ liệu xong!');
-      success = true;
-      break;
-    } catch(e) {
-      console.warn(`Lỗi gọi model ${model}:`, e);
-      lastError = e.message;
+    if (!response.ok) {
+      const errDetail = data.error?.message || `Mã lỗi ${response.status}`;
+      throw new Error(errDetail);
     }
-  }
 
-  if(!success){
-    showToast(`⚠️ Lỗi AI: ${lastError}`);
-  }
+    let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Tự động bóc tách JSON nếu AI trả về kèm thẻ ```json ... ```
+    reply = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(reply);
 
-  btn.disabled = false;
-  btn.textContent = '✨ AI Phân Tích & Tự Điền Ô';
+    if(parsed.name) document.getElementById('fName').value = parsed.name;
+    if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
+    if(parsed.date) document.getElementById('fDate').value = parsed.date;
+    if(parsed.time) document.getElementById('fTime').value = parsed.time;
+    if(parsed.service) document.getElementById('fService').value = parsed.service;
+    if(parsed.note) document.getElementById('fNote').value = parsed.note;
+
+    showToast('✨ AI đã phân tích và điền xong!');
+
+  } catch (e) {
+    console.error("Chi tiết lỗi Gemini API:", e);
+    showToast(`⚠️ Lỗi: ${e.message}`, 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ AI Phân Tích & Tự Điền Ô';
+  }
 });
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
