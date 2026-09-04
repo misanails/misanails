@@ -587,7 +587,38 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Xử lý AI Phân Tích (Sử dụng Model Chuẩn Gemini 3.6 Flash)
+// Hàm gọi AI linh hoạt hỗ trợ nhiều danh sách Model dự phòng
+async function fetchGeminiAI(promptText, apiKey) {
+  const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || `Lỗi HTTP ${response.status}`);
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Model ${model} không phản hồi, đang thử lại...`, err);
+    }
+  }
+  throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
+}
+
+// Xử lý AI Phân Tích
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
@@ -607,7 +638,7 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const todayStr = dateKey(new Date());
 
   const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý xếp lịch tiệm Nail.
-Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn duy nhất:
+Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn duy nhất không bao gồm ghi chú thêm:
 {
   "name": "Tên khách",
   "phone": "Số điện thoại",
@@ -619,28 +650,15 @@ Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn duy nh�
 Văn bản: "${text}"`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${geminiApiKey}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }]
-      })
-    });
+    const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      const errDetail = data.error?.message || `Mã lỗi ${response.status}`;
-      throw new Error(errDetail);
+    // Trích xuất chính xác cấu trúc JSON nằm trong chuỗi văn bản
+    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
     }
 
-    let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    // Tự động bóc tách JSON chuẩn không bị vướng thẻ markdown
-    reply = reply.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(reply);
+    const parsed = JSON.parse(jsonMatch[0]);
 
     if(parsed.name) document.getElementById('fName').value = parsed.name;
     if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
@@ -652,7 +670,7 @@ Văn bản: "${text}"`;
     showToast('✨ AI đã phân tích và điền xong!');
 
   } catch (e) {
-    console.error("Chi tiết lỗi Gemini API:", e);
+    console.error("Lỗi xử lý AI:", e);
     showToast(`⚠️ Lỗi: ${e.message}`, 6000);
   } finally {
     btn.disabled = false;
