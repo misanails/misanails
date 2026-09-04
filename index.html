@@ -534,6 +534,7 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
+// Cấu hình Key Gemini
 document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
   const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
   const inputKey = prompt("Dán API Key copy từ Google AI Studio (aistudio.google.com) vào đây:", currentKey);
@@ -586,9 +587,9 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Gọi Gemini AI với Model thế hệ mới & Cơ chế dự phòng
+// Hàm gọi AI linh hoạt hỗ trợ nhiều danh sách Model dự phòng
 async function fetchGeminiAI(promptText, apiKey) {
-  const models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+  const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
   let lastError = null;
 
   for (const model of models) {
@@ -598,10 +599,7 @@ async function fetchGeminiAI(promptText, apiKey) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            response_mime_type: "application/json"
-          }
+          contents: [{ parts: [{ text: promptText }] }]
         })
       });
 
@@ -614,12 +612,13 @@ async function fetchGeminiAI(promptText, apiKey) {
       if (text) return text;
     } catch (err) {
       lastError = err;
-      console.warn(`Model ${model} không phản hồi, đang thử model tiếp theo...`, err);
+      console.warn(`Model ${model} không phản hồi, đang thử lại...`, err);
     }
   }
   throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
 }
 
+// Xử lý AI Phân Tích
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
@@ -634,12 +633,12 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
 
   const btn = document.getElementById('aiParseBtn');
   btn.disabled = true;
-  btn.textContent = '⚡ AI đang xử lý...';
+  btn.textContent = '⏳ AI đang xử lý...';
 
   const todayStr = dateKey(new Date());
 
   const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý xếp lịch tiệm Nail.
-Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn:
+Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn duy nhất không bao gồm ghi chú thêm:
 {
   "name": "Tên khách",
   "phone": "Số điện thoại",
@@ -653,6 +652,7 @@ Văn bản: "${text}"`;
   try {
     const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
 
+    // Trích xuất chính xác cấu trúc JSON nằm trong chuỗi văn bản
     const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
