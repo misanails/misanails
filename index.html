@@ -586,9 +586,10 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Gọi Gemini AI với Model thế hệ mới & Cơ chế dự phòng
+// Gọi Gemini AI với cơ chế Auto-Fallback và xử lý lỗi nâng cao
 async function fetchGeminiAI(promptText, apiKey) {
-  const models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+  // Danh sách các model chạy cực nhanh và chuẩn xác (Đã loại bỏ hoàn toàn gemini-1.5-pro bị lỗi)
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-flash'];
   let lastError = null;
 
   for (const model of models) {
@@ -600,6 +601,7 @@ async function fetchGeminiAI(promptText, apiKey) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }],
           generationConfig: {
+            temperature: 0.1,
             response_mime_type: "application/json"
           }
         })
@@ -614,7 +616,7 @@ async function fetchGeminiAI(promptText, apiKey) {
       if (text) return text;
     } catch (err) {
       lastError = err;
-      console.warn(`Model ${model} không phản hồi, đang thử model tiếp theo...`, err);
+      console.warn(`Model ${model} không khả dụng, đang chuyển model kế tiếp...`, err);
     }
   }
   throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
@@ -653,6 +655,7 @@ Văn bản: "${text}"`;
   try {
     const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
 
+    // Lọc lấy nội dung JSON kể cả khi AI vô tình trả thêm các chuỗi text thừa
     const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
