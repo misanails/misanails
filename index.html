@@ -15,7 +15,6 @@
     --primary-soft:#F1D9DE;
     --gold:#B8934E;
     --gold-soft:#EFE1C4;
-    --sage:#7C9473;
     --line:#E7D9D4;
     --danger:#A83246;
     --radius:14px;
@@ -296,14 +295,6 @@ let currentDate = new Date();
 let editingId = null;
 let searchQuery = '';
 
-// Chuỗi Byte đã được mã hóa từ Key gốc để tránh trình quét tự động phát hiện
-const ENCRYPTED_KEY_BYTES = [65, 81, 46, 65, 98, 56, 82, 78, 54, 73, 51, 53, 114, 67, 52, 98, 105, 95, 110, 78, 107, 80, 52, 97, 45, 55, 75, 70, 50, 81, 51, 101, 56, 81, 106, 103, 85, 83, 89, 57, 105, 85, 111, 105, 119, 116, 121, 77, 54, 118, 114, 52, 119];
-
-// Hàm giải mã key động trong bộ nhớ RAM khi gọi API
-function getDecryptedKey() {
-  return String.fromCharCode.apply(null, ENCRYPTED_KEY_BYTES);
-}
-
 const WD_NAMES = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
 const WD_SHORT = ['CN','T2','T3','T4','T5','T6','T7'];
 const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
@@ -332,7 +323,7 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 3000);
+  setTimeout(()=> t.classList.remove('show'), 3500);
 }
 
 function updateHeader(){
@@ -543,13 +534,19 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
-// Cấu hình Key tùy chỉnh qua Nút Bánh Răng (⚙️)
+// Cấu hình Key Gemini với kiểm tra tính hợp lệ
 document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
-  const currentKey = localStorage.getItem('GEMINI_API_KEY') || getDecryptedKey();
-  const inputKey = prompt("Nhập API Key mới của bạn:", currentKey);
+  const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
+  const inputKey = prompt("Nhập Gemini API Key chính thức (Phải bắt đầu bằng AIzaSy...):", currentKey);
+  
   if (inputKey !== null) {
-    localStorage.setItem('GEMINI_API_KEY', inputKey.trim());
-    showToast('Đã lưu API Key thành công!');
+    const trimmed = inputKey.trim();
+    if (!trimmed.startsWith("AIzaSy")) {
+      alert("LỖI: Mã nhập vào không đúng định dạng Gemini API Key!\nAPI Key hợp lệ phải bắt đầu bằng chữ 'AIzaSy'. Vui lòng lấy mã tại https://aistudio.google.com/app/apikey");
+      return;
+    }
+    localStorage.setItem('GEMINI_API_KEY', trimmed);
+    showToast('Đã lưu Gemini API Key hợp lệ!');
   }
 });
 
@@ -590,13 +587,17 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// XỬ LÝ AI PHÂN TÍCH VÀ TỰ ĐIỀN Ô
+// Xử lý AI Phân Tích
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
 
-  // Lấy key đã lưu hoặc tự giải mã key mặc định từ mảng Byte
-  const geminiApiKey = localStorage.getItem('GEMINI_API_KEY') || getDecryptedKey();
+  const geminiApiKey = localStorage.getItem('GEMINI_API_KEY');
+
+  if(!geminiApiKey || !geminiApiKey.startsWith('AIzaSy')){
+    showToast('⚠️ Vui lòng bấm ⚙️ góc trên để nhập Gemini API Key (dạng AIzaSy...)');
+    return;
+  }
 
   const btn = document.getElementById('aiParseBtn');
   btn.disabled = true;
@@ -635,7 +636,7 @@ Văn bản đầu vào: "${text}"`;
     const data = await response.json();
 
     if(!response.ok){
-      throw new Error(data.error?.message || 'Lỗi kết nối API');
+      throw new Error(data.error?.message || 'Không thể xác thực API Key');
     }
 
     const reply = data.candidates[0].content.parts[0].text.trim();
@@ -648,7 +649,7 @@ Văn bản đầu vào: "${text}"`;
     if(parsed.service) document.getElementById('fService').value = parsed.service;
     if(parsed.note) document.getElementById('fNote').value = parsed.note;
 
-    showToast('✨ AI đã điền xong!');
+    showToast('✨ AI đã phân tích và điền dữ liệu xong!');
   } catch(e) {
     console.error("Lỗi AI API:", e);
     showToast('Lỗi AI: ' + e.message);
