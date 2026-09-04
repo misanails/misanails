@@ -167,7 +167,7 @@
   .toast{
     position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
     background:var(--ink); color:#fff; padding:10px 18px; border-radius:20px; font-size:13px;
-    z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; max-width: 80%; text-align: center;
+    z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; max-width: 85%; text-align: center;
   }
   .toast.show{ opacity:1; }
 </style>
@@ -587,7 +587,7 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// Xử lý AI Phân Tích
+// Xử lý AI Phân Tích (Sử dụng Model Mới Nhất)
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
@@ -607,7 +607,7 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const todayStr = dateKey(new Date());
 
   const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý sắp xếp lịch tiệm Nail. 
-Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành chuỗi JSON duy nhất (không có bất kỳ ký tự markdown hay câu giải thích thừa) theo cấu trúc:
+Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành chuỗi JSON duy nhất (không chứa ký tự mã hóa markdown) theo cấu trúc:
 {
   "name": "Tên khách",
   "phone": "Số điện thoại nếu có",
@@ -618,9 +618,9 @@ Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành chu�
 }
 Văn bản đầu vào: "${text}"`;
 
-  // Thử gọi mô hình 2.5-flash trước, nếu lỗi chuyển sang 2.0-flash
   const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
   let success = false;
+  let lastError = '';
 
   for(const model of models){
     try {
@@ -642,7 +642,7 @@ Văn bản đầu vào: "${text}"`;
       const data = await response.json();
 
       if(!response.ok){
-        throw new Error(data.error?.message || `Lỗi từ mô hình ${model}`);
+        throw new Error(data.error?.message || `Lỗi ${response.status}`);
       }
 
       const reply = data.candidates[0].content.parts[0].text.trim();
@@ -659,12 +659,13 @@ Văn bản đầu vào: "${text}"`;
       success = true;
       break;
     } catch(e) {
-      console.warn(`Lỗi khi gọi ${model}:`, e);
+      console.warn(`Lỗi gọi model ${model}:`, e);
+      lastError = e.message;
     }
   }
 
   if(!success){
-    showToast('⚠️ Kiểm tra lại API Key hoặc kết nối mạng');
+    showToast(`⚠️ Lỗi AI: ${lastError}`);
   }
 
   btn.disabled = false;
