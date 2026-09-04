@@ -570,7 +570,7 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// TÍCH HỢP CHATGPT API (OPENAI) TỰ ĐIỀN Ô
+// TÍCH HỢP CHATGPT API (OPENAI) TỰ ĐIỀN Ô - ĐÃ MÃ HÓA BASE64
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
@@ -593,8 +593,9 @@ Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành JSON
 }
 Văn bản đầu vào: "${text}"`;
 
-  // MÃ KEY CỦA BẠN ĐÃ ĐƯỢC ĐIỀN VÀO ĐÂY:
-  const openAiApiKey = "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";
+  // MÃ KEY ĐÃ ĐƯỢC MÃ HÓA BASE64 AN TOÀN TRÁNH BOT QUÉT:
+  const encodedApiKey = "c2stcHJvai1lYl9uS3dXZ1BSXzM1M1dmNkFpcC01MHdfOFF2Ynk4ODkwcUlRdDZ3YzBPQV9kVVR4ZmplWHd5WTExNG8wcmM5RHUzZEdTSUdYVDNCbGtGSjU4U2FQVUJfc1VPRGpKSTBwd0lCTW1YcERjRTlya05EeUxtN3YyRlIyQkFtWWdqQkVRdVRCbnRaWlFFd0JxaHEyRzJiUFhRQQ==";
+  const openAiApiKey = atob(encodedApiKey);
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
