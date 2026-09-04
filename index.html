@@ -13,18 +13,30 @@
       --text-muted: #8C827A;
       --border-color: #EFE8E1;
       --input-bg: #FFFFFF;
+      --offline-color: #D97706;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background-color: var(--bg-color); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; }
 
+    /* OFFLINE BANNER */
+    #offline-banner {
+      background-color: var(--offline-color);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      padding: 4px;
+      display: none;
+      z-index: 1000;
+    }
+
     /* HEADER TOP */
     header { background: var(--bg-color); padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center; }
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
-    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .header-actions { display: flex; gap: 6px; align-items: center; }
     
-    /* NÚT SEARCH VÀ CALENDARIO */
-    .btn-search-toggle {
+    .btn-icon-top {
       background: #EFE4DC;
       border: 1px solid #D5C7BC;
       border-radius: 50%;
@@ -46,7 +58,7 @@
       background: #EFE4DC; 
       border: 1px solid #D5C7BC; 
       border-radius: 14px; 
-      padding: 6px 12px; 
+      padding: 6px 10px; 
       font-size: 11px; 
       font-weight: 700; 
       color: var(--primary-color); 
@@ -68,18 +80,9 @@
     }
 
     /* THANH TÌM KIẾM TÍCH HỢP MOBILE */
-    .search-bar-container {
-      padding: 0 20px 10px;
-      display: none;
-    }
-    .search-bar-container.active {
-      display: block;
-    }
-    .search-input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .search-bar-container { padding: 0 20px 10px; display: none; }
+    .search-bar-container.active { display: block; }
+    .search-input-wrapper { position: relative; display: flex; align-items: center; }
     .search-input-wrapper input {
       width: 100%;
       padding: 8px 12px 8px 30px;
@@ -89,12 +92,7 @@
       background: #FFF;
       outline: none;
     }
-    .search-input-wrapper .search-icon {
-      position: absolute;
-      left: 10px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    .search-input-wrapper .search-icon { position: absolute; left: 10px; font-size: 12px; color: var(--text-muted); }
 
     /* DATE BANNER */
     .date-banner { padding: 4px 20px 16px; background: var(--bg-color); display: flex; align-items: baseline; gap: 8px; }
@@ -107,10 +105,22 @@
     .tab-item { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
     .tab-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
 
-    /* DAY CONTROLLER */
+    /* DAY CONTROLLER & TỔNG SỐ LƯỢNG HÔM NAY */
     .day-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--bg-color); }
     .nav-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: #EFE4DC; color: #665E57; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    
+    .view-title-group { display: flex; align-items: center; gap: 8px; }
     .current-view-title { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    /* BADGE TỔNG SỐ LƯỢNG KHÁCH TRONG NGÀY */
+    .day-total-badge {
+      background: var(--primary-color);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
     .btn-today { background: transparent; border: 1px solid #E2D7CD; border-radius: 12px; padding: 4px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
 
     /* CALENDAR CONTENT AREA */
@@ -124,7 +134,6 @@
     .appt-time-wrapper { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .appt-time { background: var(--primary-color); color: #FFF; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; }
     
-    /* BADGE SỐ LẦN ĐẶT LỊCH (LỖI ĐƯỢC KHẮC PHỤC) */
     .appt-count-badge {
       background: #EFE4DC;
       color: var(--primary-color);
@@ -154,7 +163,6 @@
     .drag-handle { width: 36px; height: 4px; background: #E2D8CE; border-radius: 2px; margin: 0 auto 12px; }
     .modal-title { font-size: 16px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
 
-    /* HERRAMIENTA IA */
     .ai-box { background: #F3ECE5; border: 1px dashed #D5C7BC; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; }
     .ai-header { font-size: 11px; font-weight: 700; color: var(--primary-color); display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
     .ai-input-wrapper { display: flex; gap: 8px; }
@@ -174,10 +182,10 @@
     .btn-modal-save:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 
-  <!-- Firebase JS SDK -->
+  <!-- Firebase JS SDK & Offline Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBwzbPL60nM2WaLnFXwuZdBo_uP65X5Ck",
@@ -191,20 +199,56 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const appointmentsCol = collection(db, "appointments");
 
+    // Bật bộ nhớ đệm Offline cho Firestore (giúp chạy mượt mà kể cả khi rớt mạng)
+    try {
+      enableIndexedDbPersistence(db).catch((err) => {
+        if (err.code == 'failed-precondition') {
+          console.warn('Nhiều tab đang mở, tính năng offline hạn chế ở tab sau.');
+        } else if (err.code == 'unimplemented') {
+          console.warn('Trình duyệt không hỗ trợ lưu trữ offline.');
+        }
+      });
+    } catch(e) {}
+
+    const appointmentsCol = collection(db, "appointments");
     window.globalAppointments = [];
 
-    // LẮNG NGHE TỐC ĐỘ CAO (REALTIME CACHE)
+    // Theo dõi trạng thái Mạng Online / Offline
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    function updateNetworkStatus() {
+      const banner = document.getElementById('offline-banner');
+      if (!navigator.onLine) {
+        banner.style.display = 'block';
+        banner.innerText = '⚠️ Đang mất kết nối mạng. Dữ liệu sẽ tự động đồng bộ khi có mạng lại.';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    // Tải dữ liệu từ LocalStorage dự phòng ngay lập tức trước khi Firebase phản hồi
+    const localCachedData = localStorage.getItem('backup_appointments');
+    if (localCachedData) {
+      try {
+        window.globalAppointments = JSON.parse(localCachedData);
+        renderAppointments();
+      } catch(e) {}
+    }
+
+    // LẮNG NGHE REALTIME
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
         docId: doc.id,
         ...doc.data()
       }));
+      // Lưu dự phòng vào LocalStorage
+      localStorage.setItem('backup_appointments', JSON.stringify(window.globalAppointments));
       renderAppointments();
     }, (error) => {
-      console.error("Firebase Error:", error);
+      console.warn("Lỗi đồng bộ, đang dùng dữ liệu dự phòng cục bộ:", error);
     });
 
     document.getElementById('modal-form').addEventListener('submit', async function(e) {
@@ -215,7 +259,6 @@
       submitBtn.innerText = 'Guardando...';
 
       const docId = document.getElementById('editing-id').value;
-
       const itemData = {
         name: document.getElementById('input-name').value.trim() || 'Cliente',
         phone: document.getElementById('input-phone').value.trim() || '',
@@ -237,10 +280,20 @@
           selectedDate = new Date(p[0], p[1] - 1, p[2]);
           updateHeaderBanner();
         }
-
         closeModal();
       } catch (err) {
-        alert('Error al guardar: ' + err.message);
+        // Xử lý khi rớt mạng hoàn toàn mà bấm lưu
+        alert('⚠️ Đang ngoại tuyến hoặc lỗi mạng. Dữ liệu đã được lưu tạm vào bộ nhớ thiết bị!');
+        if (!docId) {
+          itemData.docId = 'local_' + Date.now();
+          window.globalAppointments.push(itemData);
+        } else {
+          let idx = window.globalAppointments.findIndex(x => x.docId === docId);
+          if (idx !== -1) window.globalAppointments[idx] = { docId, ...itemData };
+        }
+        localStorage.setItem('backup_appointments', JSON.stringify(window.globalAppointments));
+        renderAppointments();
+        closeModal();
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = 'Guardar Cita';
@@ -250,7 +303,13 @@
     window.deleteItem = async function(docId) {
       if (confirm('¿Estás seguro de que deseas eliminar esta cita?')) {
         try {
-          await deleteDoc(doc(db, "appointments", docId));
+          if(docId.startsWith('local_')) {
+            window.globalAppointments = window.globalAppointments.filter(x => x.docId !== docId);
+            localStorage.setItem('backup_appointments', JSON.stringify(window.globalAppointments));
+            renderAppointments();
+          } else {
+            await deleteDoc(doc(db, "appointments", docId));
+          }
         } catch (err) {
           alert('¡No se pudo eliminar!');
         }
@@ -258,14 +317,19 @@
     };
   </script>
 </head>
-<body>
+<body onload="updateNetworkStatus()">
+
+  <div id="offline-banner">⚠️ Mất kết nối mạng. Đang hoạt động ở chế độ ngoại tuyến.</div>
 
   <!-- HEADER TOP -->
   <header>
     <div class="logo-title">AGENDA DE UÑAS</div>
     <div class="header-actions">
-      <!-- NÚT TÌM KIẾM CẬP NHẬT -->
-      <button class="btn-search-toggle" onclick="toggleSearchBar()">🔍</button>
+      <!-- NÚT BACKUP GOOGLE SHEET / CALENDAR -->
+      <button class="btn-icon-top" onclick="exportBackupData()" title="Backup / Xuất dữ liệu dự phòng">📥</button>
+      
+      <!-- NÚT TÌM KIẾM -->
+      <button class="btn-icon-top" onclick="toggleSearchBar()">🔍</button>
 
       <!-- VER CALENDARIO -->
       <div class="btn-action-top-wrapper">
@@ -277,7 +341,7 @@
     </div>
   </header>
 
-  <!-- THANH TÌM KIẾM KHÁCH HÀNG -->
+  <!-- THANH TÌM KIẾM -->
   <div class="search-bar-container" id="search-bar-container">
     <div class="search-input-wrapper">
       <span class="search-icon">🔍</span>
@@ -300,10 +364,13 @@
     <div class="tab-item" id="tab-manana" onclick="selectQuickTab('manana')">Mañana</div>
   </div>
 
-  <!-- DAY NAV CONTROLLER -->
+  <!-- DAY NAV CONTROLLER & SỐ LƯỢNG KHÁCH -->
   <div class="day-nav">
     <button class="nav-btn" onclick="changeDate(-1)">❮</button>
-    <div class="current-view-title" id="view-title">--/--</div>
+    <div class="view-title-group">
+      <div class="current-view-title" id="view-title">--/--</div>
+      <div class="day-total-badge" id="day-total-count" title="Tổng số khách đặt lịch trong ngày">0 citas</div>
+    </div>
     <button class="btn-today" onclick="goToday()">Hoy</button>
     <button class="nav-btn" onclick="changeDate(1)">❯</button>
   </div>
@@ -327,7 +394,6 @@
       <div class="drag-handle"></div>
       <div class="modal-title" id="modal-form-title">Agregar Nueva Cita</div>
 
-      <!-- HERRAMIENTA IA -->
       <div class="ai-box">
         <div class="ai-header">✨ ASISTENTE RÁPIDO IA</div>
         <div class="ai-input-wrapper">
@@ -462,11 +528,9 @@
     updateHeaderBanner();
   }
 
-  // HÀM ĐẾM SỐ LẦN ĐẶT LỊCH THEO SĐT HOẶC TÊN
   function getCustomerBookingCount(phone, name) {
     let all = window.globalAppointments || [];
     let count = 0;
-    
     let cleanPhone = phone ? phone.replace(/[\s.-]/g, '') : '';
     let cleanName = name ? name.toLowerCase().trim() : '';
 
@@ -480,7 +544,6 @@
         count++;
       }
     });
-
     return count > 0 ? count : 1;
   }
 
@@ -491,7 +554,6 @@
 
     let list = window.globalAppointments || [];
 
-    // NẾU CÓ TÌM KIẾM
     if (searchKeyword) {
       list = list.filter(item => {
         let nameMatch = item.name && item.name.toLowerCase().includes(searchKeyword);
@@ -499,9 +561,12 @@
         return nameMatch || phoneMatch;
       });
     } else {
-      // BÌNH THƯỜNG LỌC THEO NGÀY
       list = list.filter(item => item.date === targetDate);
     }
+
+    // Hiển thị tổng số lượng khách đặt lịch trong ngày hiện tại
+    let totalForDay = (window.globalAppointments || []).filter(item => item.date === targetDate).length;
+    document.getElementById('day-total-count').innerText = `${totalForDay} ${totalForDay === 1 ? 'cita' : 'citas'}`;
 
     if (list.length === 0) {
       container.innerHTML = `
@@ -536,6 +601,51 @@
     }).join('');
   }
 
+  // TÍNH NĂNG BACKUP DỮ LIỆU RA EXCEL (CSV) HOẶC GOOGLE CALENDAR (ICS)
+  function exportBackupData() {
+    let list = window.globalAppointments || [];
+    if (list.length === 0) {
+      alert('No hay datos para respaldar.');
+      return;
+    }
+
+    let choice = prompt("Chọn định dạng Backup:\n1. Tải về file Excel / Google Sheets (.CSV)\n2. Tải về file đồng bộ Google Calendar (.ICS)\nNhập '1' hoặc '2':", "1");
+    
+    if (choice === '1') {
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFFFecha,Hora,Cliente,Telefono,Servicio,Nota\n";
+      list.forEach(e => {
+        csvContent += `"${e.date}","${e.time}","${e.name || ''}","${e.phone || ''}","${e.service || ''}","${e.note || ''}"\n`;
+      });
+      let encodedUri = encodeURI(csvContent);
+      let link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `agenda_backup_${formatDateStr(new Date())}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (choice === '2') {
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Agenda de Uñas//ES\n";
+      list.forEach(e => {
+        let dtStart = e.date.replace(/-/g, '') + 'T' + (e.time ? e.time.replace(':', '') + '00' : '090000');
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:${e.name} - ${e.service}\n`;
+        icsContent += `DESCRIPTION:Tel: ${e.phone || 'N/A'} | Nota: ${e.note || ''}\n`;
+        icsContent += `DTSTART:${dtStart}\n`;
+        icsContent += `DTEND:${dtStart}\n`;
+        icsContent += "END:VEVENT\n";
+      });
+      icsContent += "END:VCALENDAR";
+
+      let blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      let link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', `agenda_calendar_${formatDateStr(new Date())}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   function openModal() {
     document.getElementById('modal-form').reset();
     document.getElementById('ai-smart-input').value = '';
@@ -566,7 +676,6 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  /* BỘ PHÂN TÍCH IA TỐI ƯU CHÍNH XÁC */
   function runAIParsing() {
     let str = document.getElementById('ai-smart-input').value.trim();
     if (!str) return;
@@ -577,26 +686,21 @@
     let targetMonth = now.getMonth();
     let targetDay = now.getDate();
 
-    // 1. LẤY SỐ ĐIỆN THOẠI
     let phoneMatch = text.match(/(?:num|núm|número|numero|tel|teléfono|telefono)?\s*([679]\d{2}[\s.-]?\d{2,3}[\s.-]?\d{2,3})/i);
     if (phoneMatch) {
       document.getElementById('input-phone').value = phoneMatch[1].replace(/[\s.-]/g, '');
       text = text.replace(phoneMatch[0], ' ');
     }
 
-    // 2. LẤY GIỜ
     let timeMatch = text.match(/(?:a\s*las\s*)?(\d{1,2})[:\.](\d{2})|(\d{1,2})\s*(?:h|hs|hrs)/i);
     if (timeMatch) {
       let h = parseInt(timeMatch[1] || timeMatch[3], 10);
       let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-      
       if (h >= 1 && h <= 6) h += 12;
-
       document.getElementById('input-time').value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       text = text.replace(timeMatch[0], ' ');
     }
 
-    // 3. LẤY NGÀY
     if (/mañana/i.test(text)) {
       targetDay = now.getDate() + 1;
       text = text.replace(/mañana/gi, ' ');
@@ -607,7 +711,6 @@
     let resDate = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resDate);
 
-    // 4. LẤY DỊCH VỤ
     let serviceFound = "";
     if (/completo/i.test(text)) { serviceFound = "Set Completo"; text = text.replace(/completo/gi, ' '); }
     else if (/relleno/i.test(text)) { serviceFound = "Relleno Acrílico"; text = text.replace(/relleno/gi, ' '); }
@@ -618,12 +721,7 @@
 
     document.getElementById('input-service').value = serviceFound || 'Servicio de Uñas';
 
-    // 5. LẤY TÊN
-    let wordsToRemove = [
-      "tiene", "cita", "a", "las", "en", "núm", "num", "número", "numero", 
-      "y", "ella", "hace", "hac", "lo", "con", "el", "la", "de", "para", "por", "un", "una"
-    ];
-
+    let wordsToRemove = ["tiene", "cita", "a", "las", "en", "núm", "num", "número", "numero", "y", "ella", "hace", "hac", "lo", "con", "el", "la", "de", "para", "por", "un", "una"];
     let words = text.split(/\s+/);
     let filteredWords = words.filter(w => {
       let cleanW = w.toLowerCase().replace(/[^a-záéíóúñ]/g, '');
