@@ -3,207 +3,202 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Đặt Lịch Hẹn - Tự Động Phân Tích AI</title>
+  <title>Thêm Khách Hẹn - Tự Động Điền AI</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { background-color: #f4f6f9; padding: 20px; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    h2 { color: #1a73e8; margin-bottom: 20px; font-size: 22px; text-align: center; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #f7f4f0; padding: 20px; color: #333; }
+    .card { max-width: 650px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h2 { font-size: 20px; font-weight: 700; color: #222; margin-bottom: 16px; }
     
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
-    input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
-    input:focus, textarea:focus { border-color: #1a73e8; box-shadow: 0 0 5px rgba(26,115,232,0.2); }
+    /* Vùng nhập AI */
+    .ai-box { background-color: #f5e9d6; border: 1px dashed #c8a36e; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
+    .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+    .ai-textarea { width: 100%; padding: 10px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: vertical; }
+    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: 0.2s; }
+    .btn-ai:hover { background: #b0881e; }
     
-    .ai-section { background-color: #e8f0fe; padding: 15px; border-radius: 8px; border: 1px solid #d2e3fc; margin-bottom: 20px; }
-    .btn-ai { width: 100%; background-color: #1a73e8; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
-    .btn-ai:hover { background-color: #1557b0; }
-    .btn-submit { width: 100%; background-color: #34a853; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    .btn-submit:hover { background-color: #2d8e47; }
-    .status-text { font-size: 12px; color: #666; margin-top: 8px; text-align: center; font-style: italic; }
+    /* Form nhập liệu */
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-col { flex: 1; }
+    label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 600; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #e2dcd5; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
+    input:focus { border-color: #c59b27; }
+
+    /* Thông báo Toast */
+    .toast { display: none; background: #222; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; text-align: center; margin-top: 10px; float: right; }
+    .actions { display: flex; gap: 12px; margin-top: 24px; clear: both; }
+    .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
+    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Tạo Lịch Hẹn Mới</h2>
+<div class="card">
+  <h2>Thêm khách hẹn</h2>
 
-  <!-- Cấu hình API Key -->
-  <div class="form-group">
-    <label for="api-key">Gemini API Key:</label>
-    <input type="password" id="api-key" placeholder="Nhập API Key của bạn tại đây...">
+  <!-- KHU VỰC AI TỰ ĐIỀN Ô -->
+  <div class="ai-box">
+    <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ AI TỰ ĐIỀN Ô:</span>
+    <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="bin 0909090 hen 11h20 chan nước"></textarea>
+    <button type="button" class="btn-ai" id="btn-ai-parse" onclick="handleFastAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
   </div>
 
-  <!-- Vùng nhập văn bản nhanh cho AI -->
-  <div class="ai-section">
-    <label for="ai-input">✨ Nhập nhanh văn bản đặt lịch:</label>
-    <textarea id="ai-input" rows="3" placeholder="Ví dụ: Anh Nam 0909123456 làm dịch vụ cắt tóc lúc 14:30 ghi chú mang theo thẻ thành viên"></textarea>
-    <button class="btn-ai" id="btn-parse" onclick="processAIInput()">Phân Tích & Tự Điền Ô</button>
-    <div id="status" class="status-text"></div>
-  </div>
-
-  <!-- Form thông tin được điền tự động -->
-  <form id="booking-form" onsubmit="event.preventDefault(); alert('Lưu lịch hẹn thành công!');">
+  <!-- FORM THÔNG TIN -->
+  <form id="booking-form" onsubmit="event.preventDefault(); alert('Đã lưu thành công!');">
     <div class="form-group">
-      <label for="input-name">Họ và Tên Khách Hang:</label>
-      <input type="text" id="input-name" placeholder="Chưa có thông tin">
+      <label>Tên khách</label>
+      <input type="text" id="input-name" placeholder="...">
     </div>
 
     <div class="form-group">
-      <label for="input-phone">Số Điện Thoại:</label>
-      <input type="text" id="input-phone" placeholder="Chưa có thông tin">
+      <label>Số điện thoại</label>
+      <input type="text" id="input-phone" placeholder="...">
+    </div>
+
+    <div class="form-row form-group">
+      <div class="form-col">
+        <label>Ngày</label>
+        <input type="date" id="input-date">
+      </div>
+      <div class="form-col">
+        <label>Giờ</label>
+        <input type="time" id="input-time">
+      </div>
     </div>
 
     <div class="form-group">
-      <label for="input-time">Thời Gian Hẹn:</label>
-      <input type="text" id="input-time" placeholder="HH:mm">
+      <label>Dịch vụ</label>
+      <input type="text" id="input-service" placeholder="...">
     </div>
 
     <div class="form-group">
-      <label for="input-service">Dịch Vụ Sử Dụng:</label>
-      <input type="text" id="input-service" placeholder="Chưa có thông tin">
+      <label>Ghi chú</label>
+      <input type="text" id="input-note" placeholder="...">
     </div>
 
-    <div class="form-group">
-      <label for="input-note">Ghi Chú:</label>
-      <input type="text" id="input-note" placeholder="Không có ghi chú">
-    </div>
+    <div id="toast-msg" class="toast">✨ AI đã phân tích và điền xong!</div>
 
-    <button type="submit" class="btn-submit">Lưu Lịch Hẹn</button>
+    <div class="actions">
+      <button type="button" class="btn-cancel">Huỷ</button>
+      <button type="submit" class="btn-submit">Lưu</button>
+    </div>
   </form>
 </div>
 
 <script>
-// Danh sách các model Gemini hiện hành (Xử lý fallback mượt mà)
-const GEMINI_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro'
-];
+const API_KEY = ""; // Điền API Key của bạn nếu muốn gọi Gemini trực tuyến
 
-/**
- * Gọi API Gemini và tự động chuyển model khi gặp lỗi
- */
-async function parseWithGemini(promptText, apiKey) {
-  if (!apiKey) throw new Error("Chưa nhập API Key");
-
-  let lastError = null;
-
-  for (const model of GEMINI_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Phân tích câu đặt lịch sau và trả về DUY NHẤT chuỗi JSON (không chứa markdown):
-              {
-                "name": "Tên khách",
-                "phone": "Số điện thoại",
-                "time": "Giờ hẹn (dạng HH:mm)",
-                "service": "Tên dịch vụ",
-                "note": "Ghi chú"
-              }
-              Nội dung: "${promptText}"`
-            }]
-          }]
-        })
-      });
-
-      if (!response.ok) continue; // Thử model tiếp theo nếu model này ngưng hỗ trợ
-
-      const data = await response.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (rawText) {
-        const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(cleanJson);
-      }
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw lastError || new Error("Không thể kết nối Gemini API");
-}
-
-/**
- * Phân tích nội bộ bằng Regex (Chạy offline, dự phòng khi API lỗi/mất mạng)
- */
-function fallbackLocalParse(inputText) {
+// 1. Phân tích Regex siêu tốc (< 5ms)
+function superFastRegexParse(inputText) {
   const result = { name: '', phone: '', time: '', service: '', note: '' };
 
-  // 1. Tách số điện thoại
-  const phoneMatch = inputText.match(/(0[3|5|7|8|9]\d{8,9})/);
+  // Tách Số điện thoại (chấp nhận từ 6 - 11 chữ số)
+  const phoneMatch = inputText.match(/(0\d{5,10})/);
   if (phoneMatch) result.phone = phoneMatch[0];
 
-  // 2. Tách thời gian (dạng 14:30, 14h30, 14h)
+  // Tách Giờ (11h20, 11:20, 11h)
   const timeMatch = inputText.match(/(\d{1,2}(?:[:h]\d{2}|h))/i);
   if (timeMatch) {
     let t = timeMatch[0].toLowerCase().replace('h', ':');
     if (!t.includes(':')) t += ':00';
-    result.time = t;
+    const parts = t.split(':');
+    result.time = `${parts[0].padStart(2, '0')}:${(parts[1] || '00').padStart(2, '0')}`;
   }
 
-  // 3. Lọc bỏ số điện thoại và thời gian để lấy tên và dịch vụ
+  // Tách Tên khách và Dịch vụ từ các từ còn lại
   let cleanText = inputText
-    .replace(result.phone, '')
+    .replace(result.phone || '', '')
     .replace(timeMatch ? timeMatch[0] : '', '')
+    .replace(/hen|hẹn/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 
-  const parts = cleanText.split(' ');
-  if (parts.length > 0) {
-    result.name = parts[0];
-    result.service = parts.slice(1).join(' ');
+  const words = cleanText.split(' ');
+  if (words.length > 0 && words[0]) {
+    result.name = words[0];
+    result.service = words.slice(1).join(' ');
   }
 
   return result;
 }
 
-/**
- * Hàm chính điều khiển phân tích và tự điền ô
- */
-async function processAIInput() {
-  const inputText = document.getElementById('ai-input').value.trim();
-  const apiKey = document.getElementById('api-key').value.trim();
-  const statusEl = document.getElementById('status');
-  const btnBtn = document.getElementById('btn-parse');
+// 2. Hàm gọi Gemini API dự phòng
+async function fetchGeminiAPI(inputText) {
+  if (!API_KEY) throw new Error("No Key");
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  
+  for (const model of models) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Trả về duy nhất JSON (no markdown) từ câu: "${inputText}". JSON format: {"name":"","phone":"","time":"HH:mm","service":"","note":""}` }] }]
+        })
+      });
+      if (!response.ok) continue;
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
+    } catch(e) {}
+  }
+  throw new Error("API Failed");
+}
 
-  if (!inputText) {
-    alert("Vui lòng nhập văn bản cần phân tích!");
-    return;
+// 3. Hàm xử lý chính khi bấm nút
+async function handleFastAnalysis() {
+  const inputEl = document.getElementById('ai-input');
+  const btnEl = document.getElementById('btn-ai-parse');
+  const toastEl = document.getElementById('toast-msg');
+  const inputText = inputEl.value.trim();
+
+  if (!inputText) return;
+
+  btnEl.disabled = true;
+
+  // Bước 1: Điền ngay lập tức kết quả từ Regex (< 5ms)
+  let data = superFastRegexParse(inputText);
+  fillToForm(data);
+
+  // Bước 2: Song song gọi API bổ trợ nếu có Key
+  if (API_KEY) {
+    try {
+      const aiData = await fetchGeminiAPI(inputText);
+      if (aiData) fillToForm(aiData);
+    } catch (e) {}
   }
 
-  btnBtn.disabled = true;
-  statusEl.innerText = "Đang phân tích dữ liệu...";
+  // Bước 3: Hiện thông báo thành công
+  btnEl.disabled = false;
+  toastEl.style.display = 'block';
+  setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
+}
 
-  let parsedData = null;
+// 4. Hàm điền giá trị và kích hoạt sự kiện thay đổi dữ liệu
+function fillToForm(data) {
+  const setVal = (id, val) => {
+    if (!val) return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = val;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  };
 
-  try {
-    // Thử phân tích qua AI trước
-    parsedData = await parseWithGemini(inputText, apiKey);
-    statusEl.innerText = "Hoàn tất phân tích bằng AI!";
-  } catch (error) {
-    // Nếu AI lỗi -> Tự động dùng Regex local, tuyệt đối không hiện bảng lỗi
-    console.warn("Chuyển sang chế độ phân tích Regex nội bộ:", error);
-    parsedData = fallbackLocalParse(inputText);
-    statusEl.innerText = "Hoàn tất phân tích dữ liệu nội bộ!";
-  } finally {
-    btnBtn.disabled = false;
-  }
+  setVal('input-name', data.name);
+  setVal('input-phone', data.phone);
+  setVal('input-time', data.time);
+  setVal('input-service', data.service);
+  setVal('input-note', data.note);
 
-  // Tự động điền dữ liệu thu được vào các ô input
-  if (parsedData) {
-    if (parsedData.name) document.getElementById('input-name').value = parsedData.name;
-    if (parsedData.phone) document.getElementById('input-phone').value = parsedData.phone;
-    if (parsedData.time) document.getElementById('input-time').value = parsedData.time;
-    if (parsedData.service) document.getElementById('input-service').value = parsedData.service;
-    if (parsedData.note) document.getElementById('input-note').value = parsedData.note;
+  // Tự điền ngày hôm nay nếu chưa chọn
+  const dateEl = document.getElementById('input-date');
+  if (dateEl && !dateEl.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateEl.value = today;
+    dateEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
 </script>
