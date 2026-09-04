@@ -3,28 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản Lý Khách Hẹn AI</title>
+  <title>Misa Nails - Quản Lý Lịch Hẹn</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #fcf9f5; padding: 20px 15px; color: #333; }
-    .container { max-width: 650px; margin: 0 auto; }
+    body { background-color: #f7f4f0; padding: 30px 15px; color: #333; }
+    .container { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
     
-    /* THANH CHUYỂN TAB ĐẸP MẮT */
-    .tab-navigation { display: flex; background: #efe6db; padding: 4px; border-radius: 10px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; font-size: 14px; font-weight: 700; color: #776e65; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-    .tab-btn.active { background: #fff; color: #a82e43; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    
-    /* CARD KHU VỰC NỘI DUNG */
+    /* CARD GIAO DIỆN CHUẨN GỐC */
     .card { background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f0e2d3; }
-    h2 { font-size: 20px; font-weight: 700; color: #2a2017; margin-bottom: 20px; }
+    h2 { font-size: 22px; font-weight: 700; color: #2a2017; margin-bottom: 20px; }
     
-    /* TAB 1: GIAO DIỆN AI THÊM HẸN (CHUẨN GỐC) */
+    /* VÙNG NHẬP AI */
     .ai-box { background-color: #f7ede1; border: 1px dashed #d8b88d; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
     .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
-    .ai-textarea { width: 100%; padding: 12px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; }
-    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 13px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .ai-textarea { width: 100%; padding: 12px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; color: #333; }
+    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 13px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
     .btn-ai:hover { background: #b0881e; }
     
+    /* FORM NHẬP LỆNH */
     .form-group { margin-bottom: 18px; }
     .form-row { display: flex; gap: 16px; }
     .form-col { flex: 1; }
@@ -32,122 +28,109 @@
     input { width: 100%; padding: 12px; border: 1px solid #e8e2da; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
     input:focus { border-color: #c59b27; }
 
+    /* NÚT THAO TÁC */
     .toast { display: none; background: #222; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; text-align: center; margin-bottom: 16px; float: right; }
     .actions { display: flex; gap: 14px; margin-top: 24px; clear: both; }
     .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
-    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
+    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.2s; }
+    .btn-submit:hover { background: #8f2436; }
 
-    /* TAB 2: GIAO DIỆN XEM LẠI LỊCH HẸN */
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
+    /* DANH SÁCH & TÌM KIẾM LỊCH HẸN */
+    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .badge-count { background: #f7ede1; color: #a37233; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; }
     .search-box { margin-bottom: 16px; }
-    .search-box input { width: 100%; padding: 10px 14px; border: 1px solid #e8e2da; border-radius: 8px; font-size: 14px; }
-
+    .search-box input { width: 100%; padding: 10px 14px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; }
+    
     .appointment-item { background: #faf8f5; border: 1px solid #eae2d8; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-    .appt-time { background: #c59b27; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
     .appt-info h4 { font-size: 15px; color: #2a2017; margin-bottom: 4px; font-weight: 700; }
     .appt-info p { font-size: 13px; color: #666; margin-bottom: 2px; }
-    .btn-delete { background: transparent; border: 1px solid #e2b6b6; color: #c53030; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 6px; }
+    .appt-time { background: #c59b27; color: #fff; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    
+    .item-actions { display: flex; gap: 8px; }
+    .btn-edit { background: #fff; border: 1px solid #c59b27; color: #c59b27; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 4px; }
+    .btn-edit:hover { background: #f7ede1; }
+    .btn-delete { background: #fff; border: 1px solid #c53030; color: #c53030; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 4px; }
     .btn-delete:hover { background: #fff0f0; }
-    .empty-msg { text-align: center; color: #999; font-size: 14px; padding: 30px 0; }
+    .empty-msg { text-align: center; color: #999; font-size: 14px; padding: 20px 0; }
   </style>
 </head>
 <body>
 
 <div class="container">
   
-  <!-- THANH CHUYỂN TAB -->
-  <div class="tab-navigation">
-    <button class="tab-btn active" onclick="switchTab('tab-create')">➕ Thêm Khách Hẹn</button>
-    <button class="tab-btn" onclick="switchTab('tab-list')">📅 Xem Lịch Hẹn (<span id="count-badge">0</span>)</button>
-  </div>
+  <!-- FORM KHÁCH HẸN GIAO DIỆN GỐC -->
+  <div class="card">
+    <h2 id="form-title">Thêm khách hẹn</h2>
 
-  <!-- TAB 1: FORM THÊM HẸN AI -->
-  <div id="tab-create" class="tab-content active">
-    <div class="card">
-      <h2>Thêm khách hẹn</h2>
-
-      <div class="ai-box">
-        <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ AI TỰ ĐIỀN Ô:</span>
-        <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="bin 0909090 hen 11h20 chan nước"></textarea>
-        <button type="button" class="btn-ai" onclick="handleSmartAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
-      </div>
-
-      <form id="booking-form" onsubmit="saveAppointment(event)">
-        <div class="form-group">
-          <label>Tên khách</label>
-          <input type="text" id="input-name" placeholder="...">
-        </div>
-
-        <div class="form-group">
-          <label>Số điện thoại</label>
-          <input type="text" id="input-phone" placeholder="...">
-        </div>
-
-        <div class="form-row form-group">
-          <div class="form-col">
-            <label>Ngày</label>
-            <input type="date" id="input-date">
-          </div>
-          <div class="form-col">
-            <label>Giờ</label>
-            <input type="time" id="input-time">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Dịch vụ</label>
-          <input type="text" id="input-service" placeholder="...">
-        </div>
-
-        <div class="form-group">
-          <label>Ghi chú</label>
-          <input type="text" id="input-note" placeholder="...">
-        </div>
-
-        <div id="toast-msg" class="toast">✨ AI đã phân tích và điền xong!</div>
-
-        <div class="actions">
-          <button type="button" class="btn-cancel" onclick="resetForm()">Huỷ</button>
-          <button type="submit" class="btn-submit">Lưu Lịch Hẹn</button>
-        </div>
-      </form>
+    <div class="ai-box">
+      <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ TỰ DO ĐỂ AI TỰ ĐIỀN Ô:</span>
+      <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="minh dt 090909090 hen 12h28 lam chan nuoc"></textarea>
+      <button type="button" class="btn-ai" onclick="handleSmartAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
     </div>
+
+    <form id="booking-form" onsubmit="saveAppointment(event)">
+      <input type="hidden" id="editing-id" value="">
+
+      <div class="form-group">
+        <label>Tên khách</label>
+        <input type="text" id="input-name" placeholder="...">
+      </div>
+
+      <div class="form-group">
+        <label>Số điện thoại</label>
+        <input type="text" id="input-phone" placeholder="...">
+      </div>
+
+      <div class="form-row form-group">
+        <div class="form-col">
+          <label>Ngày</label>
+          <input type="date" id="input-date">
+        </div>
+        <div class="form-col">
+          <label>Giờ</label>
+          <input type="time" id="input-time">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Dịch vụ</label>
+        <input type="text" id="input-service" placeholder="...">
+      </div>
+
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <input type="text" id="input-note" placeholder="...">
+      </div>
+
+      <div id="toast-msg" class="toast">✨ AI đã phân tích và điền xong!</div>
+
+      <div class="actions">
+        <button type="button" class="btn-cancel" onclick="resetForm()">Huỷ</button>
+        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu</button>
+      </div>
+    </form>
   </div>
 
-  <!-- TAB 2: XEM LẠI DANH SÁCH LỊCH HẸN -->
-  <div id="tab-list" class="tab-content">
-    <div class="card">
-      <h2>Danh sách lịch hẹn đã lưu</h2>
-      
-      <div class="search-box">
-        <input type="text" id="search-input" placeholder="🔍 Tìm theo Tên hoặc Số điện thoại..." oninput="renderAppointments()">
-      </div>
+  <!-- BẢNG DANH SÁCH CÁC LỊCH HẸN ĐÃ LƯU & CÔNG CỤ TÌM KIẾM/SỬA/XOÁ -->
+  <div class="card">
+    <div class="list-header">
+      <h2>Danh sách lịch hẹn</h2>
+      <span class="badge-count" id="appt-count">0 lịch hẹn</span>
+    </div>
 
-      <div id="appointment-list">
-        <!-- Lịch hẹn sẽ tự động hiện ra ở đây -->
-      </div>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Số điện thoại..." oninput="renderAppointments()">
+    </div>
+    
+    <div id="appointment-list">
+      <div class="empty-msg">Chưa có lịch hẹn nào.</div>
     </div>
   </div>
 
 </div>
 
 <script>
-// --- 1. CHUYỂN ĐỔI TAB ---
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  
-  document.getElementById(tabId).classList.add('active');
-  event.currentTarget.classList.add('active');
-
-  if (tabId === 'tab-list') {
-    renderAppointments();
-  }
-}
-
-// --- 2. AI PHÂN TÍCH TỰ ĐỘNG ---
+// 1. AI PHÂN TÍCH TỰ ĐỘNG
 function handleSmartAnalysis() {
   const text = document.getElementById('ai-input').value.trim();
   if (!text) return;
@@ -155,11 +138,11 @@ function handleSmartAnalysis() {
   const result = { name: '', phone: '', time: '', service: '' };
   let raw = text;
 
-  // Tách SĐT
+  // Lấy SĐT
   const phoneMatch = raw.match(/(0\d{5,10})/);
   if (phoneMatch) { result.phone = phoneMatch[0]; raw = raw.replace(result.phone, ''); }
 
-  // Tách Giờ
+  // Lấy Giờ
   const timeMatch = raw.match(/(\d{1,2}(?:[:h]\d{2}|h)?)/i);
   if (timeMatch) {
     let t = timeMatch[0].toLowerCase().replace('h', ':');
@@ -170,14 +153,14 @@ function handleSmartAnalysis() {
   }
 
   // Tách Tên & Dịch vụ
-  let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc)/gi, '').replace(/\s+/g, ' ').trim();
+  let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|dt|đt|làm|lam)/gi, '').replace(/\s+/g, ' ').trim();
   const words = clean.split(' ');
   if (words.length > 0) {
     result.name = words[0];
     result.service = words.slice(1).join(' ');
   }
 
-  // Điền vào Form
+  // Gán vào form
   const fill = (id, val) => {
     if (!val) return;
     const el = document.getElementById(id);
@@ -197,73 +180,99 @@ function handleSmartAnalysis() {
   setTimeout(() => { toast.style.display = 'none'; }, 2000);
 }
 
-// --- 3. LƯU VÀ QUẢN LÝ LỊCH HẸN (LOCALSTORAGE) ---
+// 2. LƯU & CẬP NHẬT (SỬA) LỊCH HẸN
 function getAppointments() {
-  return JSON.parse(localStorage.getItem('saved_appointments') || '[]');
+  return JSON.parse(localStorage.getItem('misa_appointments') || '[]');
 }
 
 function saveAppointment(event) {
   event.preventDefault();
 
-  const newAppt = {
-    id: Date.now(),
+  const editId = document.getElementById('editing-id').value;
+  let list = getAppointments();
+
+  const apptData = {
+    id: editId ? Number(editId) : Date.now(),
     name: document.getElementById('input-name').value || 'Khách không tên',
-    phone: document.getElementById('input-phone').value || 'Không có SĐT',
+    phone: document.getElementById('input-phone').value || 'Chưa có SĐT',
     date: document.getElementById('input-date').value || new Date().toISOString().split('T')[0],
     time: document.getElementById('input-time').value || '--:--',
     service: document.getElementById('input-service').value || 'Dịch vụ chung',
     note: document.getElementById('input-note').value || ''
   };
 
-  const list = getAppointments();
-  list.unshift(newAppt); // Lưu mới nhất lên trên
-  localStorage.setItem('saved_appointments', JSON.stringify(list));
+  if (editId) {
+    // Nếu đang SỬA -> Cập nhật lại phần tử cũ
+    list = list.map(item => item.id === Number(editId) ? apptData : item);
+    alert('✅ Cập nhật lịch hẹn thành công!');
+  } else {
+    // Nếu tạo MỚI -> Thêm vào danh sách
+    list.unshift(apptData);
+    alert('✅ Đã lưu lịch hẹn thành công!');
+  }
 
+  localStorage.setItem('misa_appointments', JSON.stringify(list));
   resetForm();
-  updateBadge();
-  
-  // Tự chuyển sang Tab Lịch Hẹn để người dùng xem kết quả ngay
-  alert('✅ Đã lưu thành công!');
-  switchTab('tab-list');
-  document.querySelectorAll('.tab-btn')[1].classList.add('active');
-  document.querySelectorAll('.tab-btn')[0].classList.remove('active');
+  renderAppointments();
 }
 
+// 3. TÍNH NĂNG SỬA (EDIT) - ĐỔ LẠI DỮ LIỆU LÊN FORM
+function editAppointment(id) {
+  const list = getAppointments();
+  const item = list.find(a => a.id === id);
+  if (!item) return;
+
+  document.getElementById('editing-id').value = item.id;
+  document.getElementById('input-name').value = item.name;
+  document.getElementById('input-phone').value = item.phone;
+  document.getElementById('input-date').value = item.date;
+  document.getElementById('input-time').value = item.time;
+  document.getElementById('input-service').value = item.service;
+  document.getElementById('input-note').value = item.note;
+
+  document.getElementById('form-title').innerText = "Chỉnh sửa lịch hẹn";
+  document.getElementById('btn-submit-label').innerText = "Cập nhật";
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 4. TÍNH NĂNG XOÁ (DELETE)
 function deleteAppointment(id) {
-  if (confirm('Bạn có chắc muốn xoá lịch hẹn này?')) {
+  if (confirm('Bạn có chắc chắn muốn xoá lịch hẹn này?')) {
     let list = getAppointments().filter(item => item.id !== id);
-    localStorage.setItem('saved_appointments', JSON.stringify(list));
+    localStorage.setItem('misa_appointments', JSON.stringify(list));
     renderAppointments();
-    updateBadge();
   }
 }
 
 function resetForm() {
   document.getElementById('booking-form').reset();
+  document.getElementById('editing-id').value = '';
   document.getElementById('ai-input').value = '';
+  document.getElementById('form-title').innerText = "Thêm khách hẹn";
+  document.getElementById('btn-submit-label').innerText = "Lưu";
 }
 
-function updateBadge() {
-  document.getElementById('count-badge').innerText = getAppointments().length;
-}
-
-// --- 4. HIỂN THỊ DANH SÁCH LỊCH HẸN ---
+// 5. TÌM KIẾM VÀ HIỂN THỊ DANH SÁCH
 function renderAppointments() {
   const list = getAppointments();
-  const searchKeyword = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const keyword = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
   const container = document.getElementById('appointment-list');
+  const countEl = document.getElementById('appt-count');
 
-  const filteredList = list.filter(item => 
-    item.name.toLowerCase().includes(searchKeyword) || 
-    item.phone.includes(searchKeyword)
+  const filtered = list.filter(i => 
+    i.name.toLowerCase().includes(keyword) || 
+    i.phone.includes(keyword)
   );
 
-  if (filteredList.length === 0) {
-    container.innerHTML = '<div class="empty-msg">Chưa có lịch hẹn nào được lưu.</div>';
+  countEl.innerText = `${filtered.length} lịch hẹn`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-msg">Chưa có lịch hẹn nào.</div>';
     return;
   }
 
-  container.innerHTML = filteredList.map(item => `
+  container.innerHTML = filtered.map(item => `
     <div class="appointment-item">
       <div class="appt-info">
         <span class="appt-time">⏰ ${item.time} - Ngày: ${item.date}</span>
@@ -271,15 +280,15 @@ function renderAppointments() {
         <p>💅 <strong>Dịch vụ:</strong> ${item.service}</p>
         ${item.note ? `<p>📝 <strong>Ghi chú:</strong> ${item.note}</p>` : ''}
       </div>
-      <button class="btn-delete" onclick="deleteAppointment(${item.id})">Xoá</button>
+      <div class="item-actions">
+        <button class="btn-edit" onclick="editAppointment(${item.id})">Sửa</button>
+        <button class="btn-delete" onclick="deleteAppointment(${item.id})">Xoá</button>
+      </div>
     </div>
   `).join('');
 }
 
-// Khởi chạy ban đầu
-window.onload = () => {
-  updateBadge();
-};
+window.onload = renderAppointments;
 </script>
 
 </body>
