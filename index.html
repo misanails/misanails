@@ -534,19 +534,19 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
-// Cấu hình Key Gemini với kiểm tra tính hợp lệ
+// Cấu hình Key tùy chỉnh qua Nút Bánh Răng (⚙️)
 document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
   const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
-  const inputKey = prompt("Nhập Gemini API Key chính thức (Phải bắt đầu bằng AIzaSy...):", currentKey);
+  const inputKey = prompt("Dán API Key copy từ Google AI Studio vào đây:", currentKey);
   
   if (inputKey !== null) {
     const trimmed = inputKey.trim();
-    if (!trimmed.startsWith("AIzaSy")) {
-      alert("LỖI: Mã nhập vào không đúng định dạng Gemini API Key!\nAPI Key hợp lệ phải bắt đầu bằng chữ 'AIzaSy'. Vui lòng lấy mã tại https://aistudio.google.com/app/apikey");
+    if (!trimmed) {
+      alert("API Key không được để trống!");
       return;
     }
     localStorage.setItem('GEMINI_API_KEY', trimmed);
-    showToast('Đã lưu Gemini API Key hợp lệ!');
+    showToast('Đã lưu API Key thành công!');
   }
 });
 
@@ -594,8 +594,8 @@ document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
 
   const geminiApiKey = localStorage.getItem('GEMINI_API_KEY');
 
-  if(!geminiApiKey || !geminiApiKey.startsWith('AIzaSy')){
-    showToast('⚠️ Vui lòng bấm ⚙️ góc trên để nhập Gemini API Key (dạng AIzaSy...)');
+  if(!geminiApiKey){
+    showToast('⚠️ Vui lòng bấm ⚙️ góc trên để nhập API Key');
     return;
   }
 
@@ -636,7 +636,7 @@ Văn bản đầu vào: "${text}"`;
     const data = await response.json();
 
     if(!response.ok){
-      throw new Error(data.error?.message || 'Không thể xác thực API Key');
+      throw new Error(data.error?.message || 'Lỗi kết nối API');
     }
 
     const reply = data.candidates[0].content.parts[0].text.trim();
