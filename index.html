@@ -211,9 +211,9 @@
 
       <!-- KHUNG CÔNG CỤ AI NHẬP NHANH -->
       <div class="ai-box">
-        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Bao gồm Ngày/Tháng)</div>
+        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Smart Parser)</div>
         <div class="ai-input-wrapper">
-          <input type="text" id="ai-smart-input" placeholder="VD: Maria 0912345678 làm refill thứ 2 tuần sau 2h chiều" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <input type="text" id="ai-smart-input" placeholder="Điện thoại 9999 Hằng vào 08.30 ngày 07" onkeyup="if(event.key==='Enter') runAIParsing()">
           <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Phân tích AI</button>
         </div>
       </div>
@@ -331,7 +331,6 @@
     el.classList.add('active');
   }
 
-  // MODAL LOGIC
   function openModal() {
     document.getElementById('modal-form').reset();
     document.getElementById('ai-smart-input').value = '';
@@ -362,90 +361,98 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // CÔNG CỤ AI NÂNG CẤP PHÂN TÍCH CẢ NGÀY THÁNG
+  // CÔNG CỤ AI THÔNG MINH TÁCH CHÍNH XÁC TỪNG Ô
   function runAIParsing() {
-    const val = document.getElementById('ai-smart-input').value.trim();
-    if (!val) return;
+    let rawStr = document.getElementById('ai-smart-input').value.trim();
+    if (!rawStr) return;
 
-    let text = val.toLowerCase();
-    let parsedDate = new Date(); // Mặc định là hôm nay
+    let workingStr = rawStr;
+    let now = new Date();
+    let targetYear = now.getFullYear();
+    let targetMonth = now.getMonth();
+    let targetDay = now.getDate();
 
-    // 1. Phân tích NGÀY / THÁNG
-    let dateFound = false;
-
-    // Nhận diện ngày cụ thể: 15/10, 15/10/2026, 15-10
-    const specificDateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{4}))?/);
-    if (specificDateMatch) {
-      let d = parseInt(specificDateMatch[1], 10);
-      let m = parseInt(specificDateMatch[2], 10) - 1;
-      let y = specificDateMatch[3] ? parseInt(specificDateMatch[3], 10) : parsedDate.getFullYear();
-      parsedDate = new Date(y, m, d);
-      dateFound = true;
-    }
-
-    if (!dateFound) {
-      if (text.includes("ngày mai") || text.includes("mai")) {
-        parsedDate.setDate(parsedDate.getDate() + 1);
-      } else if (text.includes("ngày kia") || text.includes("mốt")) {
-        parsedDate.setDate(parsedDate.getDate() + 2);
-      } else if (text.includes("tháng sau") || text.includes("tháng tới")) {
-        parsedDate.setMonth(parsedDate.getMonth() + 1);
-      } else {
-        // Nhận diện thứ trong tuần (Thứ 2 đến Thứ 7, Chủ Nhật)
-        const dayMap = { "chủ nhật": 0, "cn": 0, "thứ 2": 1, "thứ hai": 1, "t2": 1, "thứ 3": 2, "thứ ba": 2, "t3": 2, "thứ 4": 3, "thứ tư": 3, "t4": 3, "thứ 5": 4, "thứ năm": 4, "t5": 4, "thứ 6": 5, "thứ sáu": 5, "t6": 5, "thứ 7": 6, "thứ bảy": 6, "t7": 6 };
-        for (let key in dayMap) {
-          if (text.includes(key)) {
-            let targetDay = dayMap[key];
-            let currentDay = parsedDate.getDay();
-            let distance = targetDay - currentDay;
-            if (distance <= 0) distance += 7; // Lấy thứ của tuần kế tiếp nếu trùng ngày đã qua
-            if (text.includes("tuần sau")) distance += 7;
-            parsedDate.setDate(parsedDate.getDate() + distance);
-            break;
-          }
-        }
-      }
-    }
-
-    // Cập nhật ô Ngày trên Form
-    document.getElementById('input-date').value = formatDateStr(parsedDate);
-
-    // 2. Phân tích SỐ ĐIỆN THOẠI
-    let nameClean = val;
-    const phoneMatch = val.match(/(0\d{8,10}|\d{3}[\s.-]?\d{3}[\s.-]?\d{3,4})/);
+    // 1. TÁCH SỐ ĐIỆN THOẠI (Bao gồm số 4 chữ số hoặc số dài)
+    let phoneFound = "";
+    // Bắt các cụm như: "điện thoại 9999", "dt 9999", "sđt 0912345678" hoặc chuỗi số độc lập
+    let phonePattern = /(?:điện\s*thoại|dt|sdt|phone|st)\s*[:.-]?\s*(\d{4,11})|(\b0\d{8,10}\b|\b\d{8,11}\b)/i;
+    let phoneMatch = workingStr.match(phonePattern);
+    
     if (phoneMatch) {
-      document.getElementById('input-phone').value = phoneMatch[0];
-      nameClean = nameClean.replace(phoneMatch[0], '');
+      phoneFound = phoneMatch[1] || phoneMatch[2];
+      document.getElementById('input-phone').value = phoneFound;
+      // Cắt bỏ cụm số điện thoại khỏi chuỗi phân tích
+      workingStr = workingStr.replace(phoneMatch[0], ' ');
     }
 
-    // 3. Phân tích GIỜ HẸN
-    let isPM = /chiều|tối|pm/i.test(val);
-    const timeMatch = val.match(/(\d{1,2})(?:[:h](\d{2}))?\s*(g|giờ|h|pm|am)?/i);
+    // 2. TÁCH GIỜ (Ví dụ: 08.30, 8h30, 8:30, 2h chiều, 14h)
+    let timePattern = /(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am)/i;
+    let timeMatch = workingStr.match(timePattern);
+    let isPM = /chiều|tối|pm/i.test(workingStr);
+
     if (timeMatch) {
-      let hours = parseInt(timeMatch[1], 10);
-      let minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-
-      if (isPM && hours < 12) hours += 12;
-      if (hours >= 0 && hours <= 23) {
-        document.getElementById('input-time').value = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      let h = parseInt(timeMatch[1] || timeMatch[3], 10);
+      let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+      if (isPM && h < 12) h += 12;
+      
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        document.getElementById('input-time').value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       }
-      nameClean = nameClean.replace(timeMatch[0], '');
+      workingStr = workingStr.replace(timeMatch[0], ' ');
     }
 
-    // 4. Phân tích DỊCH VỤ
-    const servicesKeywords = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "sơn gel", "cắt da", "móng úp"];
-    for (let service of servicesKeywords) {
-      if (val.toLowerCase().includes(service)) {
-        document.getElementById('input-service').value = service.charAt(0).toUpperCase() + service.slice(1);
-        nameClean = nameClean.replace(new RegExp(service, 'gi'), '');
+    // 3. TÁCH NGÀY / THÁNG
+    // Ưu tiên khớp: "ngày 07", "ngày 7/9", "07/09"
+    let datePattern = /(?:ngày\s*)?(\d{1,2})(?:[\/\-](\d{1,2}))?(?:[\/\-](\d{4}))?/i;
+    let dayMatch = workingStr.match(/(?:ngày|ngay)\s*(\d{1,2})/i);
+    
+    if (dayMatch) {
+      targetDay = parseInt(dayMatch[1], 10);
+      // Nếu ngày hẹn nhỏ hơn ngày hiện tại, tự hiểu là sang tháng tiếp theo
+      if (targetDay < now.getDate()) {
+        targetMonth += 1;
+      }
+      workingStr = workingStr.replace(dayMatch[0], ' ');
+    } else {
+      let slashDateMatch = workingStr.match(/(\d{1,2})[\/\-](\d{1,2})/);
+      if (slashDateMatch) {
+        targetDay = parseInt(slashDateMatch[1], 10);
+        targetMonth = parseInt(slashDateMatch[2], 10) - 1;
+        workingStr = workingStr.replace(slashDateMatch[0], ' ');
+      } else if (/mai|ngày mai/i.test(workingStr)) {
+        targetDay = now.getDate() + 1;
+        workingStr = workingStr.replace(/ngày mai|mai/gi, ' ');
+      }
+    }
+
+    let resultDateObj = new Date(targetYear, targetMonth, targetDay);
+    document.getElementById('input-date').value = formatDateStr(resultDateObj);
+
+    // 4. TÁCH DỊCH VỤ NAIL
+    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "sơn gel", "cắt da", "móng úp", "chà gót"];
+    let foundService = "";
+    for (let s of servicesList) {
+      if (new RegExp('\\b' + s + '\\b', 'i').test(workingStr)) {
+        foundService = s.charAt(0).toUpperCase() + s.slice(1);
+        workingStr = workingStr.replace(new RegExp('\\b' + s + '\\b', 'gi'), ' ');
         break;
       }
     }
+    if (foundService) {
+      document.getElementById('input-service').value = foundService;
+    }
 
-    // Xóa bớt các từ chỉ thời gian thừa để trích xuất TÊN KHÁCH
-    nameClean = nameClean.replace(/ngày mai|ngày kia|mốt|mai|thứ \d|chủ nhật|tuần sau|tháng tới|tháng sau|làm|lúc|chiều|tối|ngày|giờ|hôn|hôm nay/gi, '').trim();
-    if (nameClean) {
-      document.getElementById('input-name').value = nameClean;
+    // 5. LÀM SẠCH CÒN LẠI ĐỂ LẤY TÊN KHÁCH
+    // Loại bỏ các hư từ tiếng Việt nối câu
+    let cleanName = workingStr
+      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|vào|lúc|chiều|tối|sáng|hôm|nay|châm|làm/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Chữ hoa đầu từ cho Tên
+    if (cleanName) {
+      cleanName = cleanName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      document.getElementById('input-name').value = cleanName;
     }
   }
 
