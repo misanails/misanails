@@ -23,6 +23,20 @@
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
     
+    /* NÚT SEARCH VÀ CALENDARIO */
+    .btn-search-toggle {
+      background: #EFE4DC;
+      border: 1px solid #D5C7BC;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
     .btn-action-top-wrapper {
       position: relative;
       display: inline-block;
@@ -53,6 +67,35 @@
       -webkit-appearance: none;
     }
 
+    /* THANH TÌM KIẾM TÍCH HỢP MOBILE */
+    .search-bar-container {
+      padding: 0 20px 10px;
+      display: none;
+    }
+    .search-bar-container.active {
+      display: block;
+    }
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input-wrapper input {
+      width: 100%;
+      padding: 8px 12px 8px 30px;
+      border-radius: 10px;
+      border: 1px solid #D5C7BC;
+      font-size: 12px;
+      background: #FFF;
+      outline: none;
+    }
+    .search-input-wrapper .search-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
     /* DATE BANNER */
     .date-banner { padding: 4px 20px 16px; background: var(--bg-color); display: flex; align-items: baseline; gap: 8px; }
     .big-day { font-size: 32px; font-weight: 800; color: var(--text-dark); line-height: 1; }
@@ -78,7 +121,20 @@
 
     /* CARD DE CLIENTE */
     .appt-card { background: #FFF; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.01); }
-    .appt-time { background: var(--primary-color); color: #FFF; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 4px; }
+    .appt-time-wrapper { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .appt-time { background: var(--primary-color); color: #FFF; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; }
+    
+    /* BADGE SỐ LẦN ĐẶT LỊCH (LỖI ĐƯỢC KHẮC PHỤC) */
+    .appt-count-badge {
+      background: #EFE4DC;
+      color: var(--primary-color);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 10px;
+      border: 1px solid #D5C7BC;
+    }
+
     .appt-name { font-size: 15px; font-weight: 700; color: var(--text-dark); }
     .appt-phone { font-size: 13px; color: var(--text-muted); font-weight: 400; }
     .appt-service { font-size: 12px; color: #554E48; margin-top: 3px; }
@@ -139,6 +195,7 @@
 
     window.globalAppointments = [];
 
+    // LẮNG NGHE TỐC ĐỘ CAO (REALTIME CACHE)
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
@@ -150,7 +207,6 @@
       console.error("Firebase Error:", error);
     });
 
-    // KHẮC PHỤC LỖI NÚT LƯU LẠI (GUARDAR CITA)
     document.getElementById('modal-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -176,7 +232,6 @@
           await addDoc(appointmentsCol, itemData);
         }
         
-        // Chuyển sang ngày vừa lưu để xem ngay kết quả
         if (itemData.date) {
           const p = itemData.date.split('-');
           selectedDate = new Date(p[0], p[1] - 1, p[2]);
@@ -209,6 +264,10 @@
   <header>
     <div class="logo-title">AGENDA DE UÑAS</div>
     <div class="header-actions">
+      <!-- NÚT TÌM KIẾM CẬP NHẬT -->
+      <button class="btn-search-toggle" onclick="toggleSearchBar()">🔍</button>
+
+      <!-- VER CALENDARIO -->
       <div class="btn-action-top-wrapper">
         <button class="btn-action-top">
           📅 <span>Ver Calendario</span>
@@ -217,6 +276,14 @@
       </div>
     </div>
   </header>
+
+  <!-- THANH TÌM KIẾM KHÁCH HÀNG -->
+  <div class="search-bar-container" id="search-bar-container">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar por nombre o teléfono..." oninput="renderAppointments()">
+    </div>
+  </div>
 
   <!-- DATE BANNER -->
   <div class="date-banner">
@@ -326,6 +393,17 @@
     return `${year}-${month}-${day}`;
   }
 
+  function toggleSearchBar() {
+    const container = document.getElementById('search-bar-container');
+    container.classList.toggle('active');
+    if (container.classList.contains('active')) {
+      document.getElementById('search-input').focus();
+    } else {
+      document.getElementById('search-input').value = '';
+      renderAppointments();
+    }
+  }
+
   function onDateSelectedFromPicker(val) {
     if (!val) return;
     const parts = val.split('-');
@@ -384,36 +462,78 @@
     updateHeaderBanner();
   }
 
+  // HÀM ĐẾM SỐ LẦN ĐẶT LỊCH THEO SĐT HOẶC TÊN
+  function getCustomerBookingCount(phone, name) {
+    let all = window.globalAppointments || [];
+    let count = 0;
+    
+    let cleanPhone = phone ? phone.replace(/[\s.-]/g, '') : '';
+    let cleanName = name ? name.toLowerCase().trim() : '';
+
+    all.forEach(item => {
+      let itemPhone = item.phone ? item.phone.replace(/[\s.-]/g, '') : '';
+      let itemName = item.name ? item.name.toLowerCase().trim() : '';
+
+      if (cleanPhone && itemPhone && cleanPhone === itemPhone) {
+        count++;
+      } else if (!cleanPhone && cleanName && itemName && cleanName === itemName) {
+        count++;
+      }
+    });
+
+    return count > 0 ? count : 1;
+  }
+
   function renderAppointments() {
     const container = document.getElementById('calendar-content');
     const targetDate = window.currentSelectedDate;
+    const searchKeyword = document.getElementById('search-input').value.toLowerCase().trim();
 
-    const list = (window.globalAppointments || []).filter(item => item.date === targetDate);
+    let list = window.globalAppointments || [];
+
+    // NẾU CÓ TÌM KIẾM
+    if (searchKeyword) {
+      list = list.filter(item => {
+        let nameMatch = item.name && item.name.toLowerCase().includes(searchKeyword);
+        let phoneMatch = item.phone && item.phone.includes(searchKeyword);
+        return nameMatch || phoneMatch;
+      });
+    } else {
+      // BÌNH THƯỜNG LỌC THEO NGÀY
+      list = list.filter(item => item.date === targetDate);
+    }
 
     if (list.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <h3>Sin citas programadas</h3>
-          <p>Toca "+ Nueva Cita" para agregar clientes en este día</p>
+          <h3>${searchKeyword ? 'No se encontraron citas' : 'Sin citas programadas'}</h3>
+          <p>${searchKeyword ? 'Intenta con otro nombre o teléfono' : 'Toca "+ Nueva Cita" para agregar clientes en este día'}</p>
         </div>`;
       return;
     }
 
     list.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-    container.innerHTML = list.map(item => `
-      <div class="appt-card">
-        <div>
-          <span class="appt-time">⏰ ${item.time}</span>
-          <div class="appt-name">${item.name} ${item.phone ? `<span class="appt-phone">(${item.phone})</span>` : ''}</div>
-          <div class="appt-service">💅 ${item.service} ${item.note ? `| 📝 ${item.note}` : ''}</div>
+    container.innerHTML = list.map(item => {
+      let bookingCount = getCustomerBookingCount(item.phone, item.name);
+      return `
+        <div class="appt-card">
+          <div>
+            <div class="appt-time-wrapper">
+              <span class="appt-time">⏰ ${item.time}</span>
+              <span class="appt-count-badge" title="Número de citas de este cliente">x${bookingCount}</span>
+            </div>
+            <div class="appt-name">${item.name} ${item.phone ? `<span class="appt-phone">(${item.phone})</span>` : ''}</div>
+            <div class="appt-service">💅 ${item.service} ${item.note ? `| 📝 ${item.note}` : ''}</div>
+            ${searchKeyword ? `<div style="font-size: 10px; color: var(--primary-color); margin-top:2px;">📅 ${item.date}</div>` : ''}
+          </div>
+          <div class="appt-actions">
+            <button class="btn-edit-act" onclick="editItem('${item.docId}')">Editar</button>
+            <button class="btn-del-act" onclick="deleteItem('${item.docId}')">Eliminar</button>
+          </div>
         </div>
-        <div class="appt-actions">
-          <button class="btn-edit-act" onclick="editItem('${item.docId}')">Editar</button>
-          <button class="btn-del-act" onclick="deleteItem('${item.docId}')">Eliminar</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   function openModal() {
@@ -470,7 +590,6 @@
       let h = parseInt(timeMatch[1] || timeMatch[3], 10);
       let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
       
-      // Giờ từ 1 đến 6 tự hiểu là giờ chiều
       if (h >= 1 && h <= 6) h += 12;
 
       document.getElementById('input-time').value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -488,7 +607,7 @@
     let resDate = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resDate);
 
-    // 4. LẤY DỊCH VỤ (Tự nhận diện viết tắt như uñ, uñas, completo, v.v.)
+    // 4. LẤY DỊCH VỤ
     let serviceFound = "";
     if (/completo/i.test(text)) { serviceFound = "Set Completo"; text = text.replace(/completo/gi, ' '); }
     else if (/relleno/i.test(text)) { serviceFound = "Relleno Acrílico"; text = text.replace(/relleno/gi, ' '); }
@@ -499,7 +618,7 @@
 
     document.getElementById('input-service').value = serviceFound || 'Servicio de Uñas';
 
-    // 5. LẤY TÊN CHÍNH XÁC (Loại bỏ các cụm từ ngữ pháp tiếng TBN)
+    // 5. LẤY TÊN
     let wordsToRemove = [
       "tiene", "cita", "a", "las", "en", "núm", "num", "número", "numero", 
       "y", "ella", "hace", "hac", "lo", "con", "el", "la", "de", "para", "por", "un", "una"
