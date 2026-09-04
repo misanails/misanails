@@ -3,52 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misa Nails - Quản Lý Lịch Hẹn Firebase</title>
+  <title>Misa Nails - Quản Lý & Xem Lịch Sử Hẹn</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: #f7f4f0; padding: 30px 15px; color: #333; }
+    body { background-color: #f7f4f0; padding: 25px 15px; color: #333; }
     .container { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
     
-    .card { background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f0e2d3; }
-    h2 { font-size: 22px; font-weight: 700; color: #2a2017; margin-bottom: 20px; }
+    .card { background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f0e2d3; }
+    h2 { font-size: 20px; font-weight: 700; color: #2a2017; margin-bottom: 18px; }
     
     /* VÙNG AI */
-    .ai-box { background-color: #f7ede1; border: 1px dashed #d8b88d; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .ai-box { background-color: #f7ede1; border: 1px dashed #d8b88d; border-radius: 8px; padding: 14px; margin-bottom: 20px; }
     .ai-title { font-size: 11px; font-weight: 800; color: #a37233; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
-    .ai-textarea { width: 100%; padding: 12px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; color: #333; }
-    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 13px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .ai-textarea { width: 100%; padding: 10px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; background: #fff; outline: none; resize: none; color: #333; }
+    .btn-ai { width: 100%; background: #c59b27; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
     .btn-ai:hover { background: #b0881e; }
     
-    /* FORM */
-    .form-group { margin-bottom: 18px; }
-    .form-row { display: flex; gap: 16px; }
+    /* FORM FORM */
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: flex; gap: 12px; }
     .form-col { flex: 1; }
     label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 600; }
-    input { width: 100%; padding: 12px; border: 1px solid #e8e2da; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #e8e2da; border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
     input:focus { border-color: #c59b27; }
 
-    .toast { display: none; background: #222; color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; text-align: center; margin-bottom: 16px; float: right; }
-    .actions { display: flex; gap: 14px; margin-top: 24px; clear: both; }
-    .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
-    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 13px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
-    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+    .toast { display: none; background: #222; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 12px; text-align: center; margin-bottom: 12px; float: right; }
+    .actions { display: flex; gap: 12px; margin-top: 20px; clear: both; }
+    .btn-cancel { flex: 1; background: #fff; border: 1px solid #dcd3c9; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #555; text-align: center; }
+    .btn-submit { flex: 1; background: #a82e43; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; }
 
-    /* DANH SÁCH & TÌM KIẾM */
+    /* LỌC & XEM LỊCH SỬ HÔM TRƯỚC */
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .badge-count { background: #f7ede1; color: #a37233; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; }
-    .search-box { margin-bottom: 16px; }
-    .search-box input { width: 100%; padding: 10px 14px; border: 1px solid #e0ceb5; border-radius: 6px; font-size: 14px; }
     
-    .appointment-item { background: #faf8f5; border: 1px solid #eae2d8; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-bar input[type="text"] { flex: 2; min-width: 180px; }
+    .filter-bar input[type="date"] { flex: 1; min-width: 140px; }
+    .btn-reset-filter { background: #efe6db; border: none; padding: 10px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; color: #666; cursor: pointer; }
+
+    .appointment-item { background: #faf8f5; border: 1px solid #eae2d8; border-radius: 8px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .appt-info h4 { font-size: 15px; color: #2a2017; margin-bottom: 4px; font-weight: 700; }
     .appt-info p { font-size: 13px; color: #666; margin-bottom: 2px; }
-    .appt-time { background: #c59b27; color: #fff; font-size: 12px; font-weight: bold; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .appt-time { background: #c59b27; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
     
-    .item-actions { display: flex; gap: 8px; }
-    .btn-edit { background: #fff; border: 1px solid #c59b27; color: #c59b27; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 4px; }
-    .btn-edit:hover { background: #f7ede1; }
-    .btn-delete { background: #fff; border: 1px solid #c53030; color: #c53030; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 4px; }
-    .btn-delete:hover { background: #fff0f0; }
+    .item-actions { display: flex; gap: 6px; }
+    .btn-edit { background: #fff; border: 1px solid #c59b27; color: #c59b27; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 10px; border-radius: 4px; }
+    .btn-delete { background: #fff; border: 1px solid #c53030; color: #c53030; font-size: 12px; cursor: pointer; font-weight: 600; padding: 6px 10px; border-radius: 4px; }
     .empty-msg { text-align: center; color: #999; font-size: 14px; padding: 20px 0; }
   </style>
 </head>
@@ -56,7 +56,7 @@
 
 <div class="container">
   
-  <!-- FORM TẠO VÀ SỬA LỊCH HẸN -->
+  <!-- KHOẢNG 1: FORM ĐIỀN THÔNG TIN LỊCH HẸN -->
   <div class="card">
     <h2 id="form-title">Thêm khách hẹn</h2>
 
@@ -66,7 +66,7 @@
       <button type="button" class="btn-ai" onclick="handleSmartAnalysis()">✨ AI Phân Tích & Tự Điền Ô</button>
     </div>
 
-    <form id="booking-form" onsubmit="saveToFirebase(event)">
+    <form id="booking-form" onsubmit="saveAppointment(event)">
       <input type="hidden" id="editing-id" value="">
 
       <div class="form-group">
@@ -81,11 +81,11 @@
 
       <div class="form-row form-group">
         <div class="form-col">
-          <label>Ngày</label>
+          <label>Ngày hẹn</label>
           <input type="date" id="input-date">
         </div>
         <div class="form-col">
-          <label>Giờ</label>
+          <label>Giờ hẹn</label>
           <input type="time" id="input-time">
         </div>
       </div>
@@ -104,172 +104,150 @@
 
       <div class="actions">
         <button type="button" class="btn-cancel" onclick="resetForm()">Huỷ</button>
-        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu Lên Cloud</button>
+        <button type="submit" class="btn-submit" id="btn-submit-label">Lưu Lịch Hẹn</button>
       </div>
     </form>
   </div>
 
-  <!-- DANH SÁCH XEM LẠI, TÌM KIẾM, SỬA, XOÁ -->
+  <!-- KHOẢNG 2: DANH SÁCH LỊCH HẸN & LỊCH SỬ CÁC HÔM TRƯỚC -->
   <div class="card">
     <div class="list-header">
-      <h2>Danh sách lịch hẹn (Realtime Firebase)</h2>
+      <h2>Lịch sử & Danh sách hẹn</h2>
       <span class="badge-count" id="appt-count">0 lịch hẹn</span>
     </div>
 
-    <div class="search-box">
-      <input type="text" id="search-input" placeholder="🔍 Tìm kiếm theo Tên hoặc Số điện thoại..." oninput="filterAppointments()">
+    <!-- TÌM KIẾM VÀ LỌC THEO NGÀY -->
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="🔍 Tìm Tên / SĐT..." oninput="renderAppointments()">
+      <input type="date" id="filter-date" onchange="renderAppointments()" title="Lọc xem theo ngày">
+      <button type="button" class="btn-reset-filter" onclick="clearFilter()">Xem Tất Cả</button>
     </div>
     
     <div id="appointment-list">
-      <div class="empty-msg">Đang tải dữ liệu từ Cloud...</div>
+      <div class="empty-msg">Chưa có lịch hẹn nào.</div>
     </div>
   </div>
 
 </div>
 
-<!-- CẤU HÌNH FIREBASE SDK V10 -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    updateDoc, 
-    deleteDoc, 
-    doc, 
-    onSnapshot, 
-    query, 
-    orderBy 
-  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script>
+// --- 1. QUẢN LÝ LƯU TRỮ VĨNH VIỄN (LOCALSTORAGE - F5 KHÔNG MẤT) ---
+const STORAGE_KEY = "misanails_permanent_db";
 
-  // TODO: THAY CẤU HÌNH FIREBASE CỦA BẠN VÀO ĐÂY
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+function getAppointments() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function saveToStorage(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+// --- 2. LƯU & SỬA LỊCH HẸN ---
+function saveAppointment(event) {
+  event.preventDefault();
+
+  const editId = document.getElementById('editing-id').value;
+  let list = getAppointments();
+
+  const apptData = {
+    id: editId ? Number(editId) : Date.now(),
+    name: document.getElementById('input-name').value || 'Khách không tên',
+    phone: document.getElementById('input-phone').value || 'Chưa có SĐT',
+    date: document.getElementById('input-date').value || new Date().toISOString().split('T')[0],
+    time: document.getElementById('input-time').value || '--:--',
+    service: document.getElementById('input-service').value || 'Dịch vụ chung',
+    note: document.getElementById('input-note').value || ''
   };
 
-  // Khởi tạo Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const appointmentsRef = collection(db, "appointments");
+  if (editId) {
+    list = list.map(item => item.id === Number(editId) ? apptData : item);
+    alert('✅ Cập nhật thành công!');
+  } else {
+    list.unshift(apptData);
+    alert('✅ Đã lưu vĩnh viễn thành công!');
+  }
 
-  let globalAppointments = [];
+  saveToStorage(list);
+  resetForm();
+  renderAppointments();
+}
 
-  // LẮNG NGHE ĐỒNG BỘ REALTIME DỮ LIỆU (KHI F5 HOẶC SỬA TRÊN ĐIỆN THOẠI)
-  const q = query(appointmentsRef, orderBy("timestamp", "desc"));
-  onSnapshot(q, (snapshot) => {
-    globalAppointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderAppointments(globalAppointments);
+// --- 3. ĐỔ DỮ LIỆU ĐỂ SỬA (EDIT) ---
+function editAppointment(id) {
+  const list = getAppointments();
+  const item = list.find(a => a.id === id);
+  if (!item) return;
+
+  document.getElementById('editing-id').value = item.id;
+  document.getElementById('input-name').value = item.name;
+  document.getElementById('input-phone').value = item.phone;
+  document.getElementById('input-date').value = item.date;
+  document.getElementById('input-time').value = item.time;
+  document.getElementById('input-service').value = item.service;
+  document.getElementById('input-note').value = item.note || '';
+
+  document.getElementById('form-title').innerText = "Chỉnh sửa lịch hẹn";
+  document.getElementById('btn-submit-label').innerText = "Cập nhật";
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// --- 4. XOÁ LỊCH HẸN ---
+function deleteAppointment(id) {
+  if (confirm('Bạn có chắc chắn muốn xoá lịch hẹn này?')) {
+    let list = getAppointments().filter(item => item.id !== id);
+    saveToStorage(list);
+    renderAppointments();
+  }
+}
+
+// --- 5. HIỂN THỊ VÀ LỌC LỊCH SỬ CÁC HÔM TRƯỚC ---
+function renderAppointments() {
+  const list = getAppointments();
+  const keyword = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+  const selectedDate = document.getElementById('filter-date')?.value;
+  
+  const container = document.getElementById('appointment-list');
+  const countEl = document.getElementById('appt-count');
+
+  // Lọc theo Tên/SĐT và Lọc theo Ngày chọn
+  const filtered = list.filter(item => {
+    const matchKey = item.name.toLowerCase().includes(keyword) || item.phone.includes(keyword);
+    const matchDate = selectedDate ? item.date === selectedDate : true;
+    return matchKey && matchDate;
   });
 
-  // HÀM LƯU / CẬP NHẬT TRÊN FIREBASE
-  window.saveToFirebase = async function(event) {
-    event.preventDefault();
-    const btnSubmit = document.getElementById('btn-submit-label');
-    btnSubmit.disabled = true;
+  countEl.innerText = `${filtered.length} lịch hẹn`;
 
-    const editId = document.getElementById('editing-id').value;
-    const data = {
-      name: document.getElementById('input-name').value || 'Khách không tên',
-      phone: document.getElementById('input-phone').value || 'Chưa có SĐT',
-      date: document.getElementById('input-date').value || new Date().toISOString().split('T')[0],
-      time: document.getElementById('input-time').value || '--:--',
-      service: document.getElementById('input-service').value || 'Dịch vụ chung',
-      note: document.getElementById('input-note').value || '',
-      timestamp: Date.now()
-    };
-
-    try {
-      if (editId) {
-        // Cập nhật record cũ
-        await updateDoc(doc(db, "appointments", editId), data);
-        alert("✅ Đã cập nhật thành công!");
-      } else {
-        // Thêm mới lên Firebase
-        await addDoc(appointmentsRef, data);
-        alert("✅ Đã lưu lên Firebase thành công!");
-      }
-      resetForm();
-    } catch (e) {
-      alert("❌ Lỗi khi lưu lên Firebase: " + e.message);
-    } finally {
-      btnSubmit.disabled = false;
-    }
-  };
-
-  // HÀM XOÁ BẰNG FIREBASE
-  window.deleteAppointment = async function(id) {
-    if (confirm("Bạn có chắc chắn muốn xoá lịch hẹn này?")) {
-      try {
-        await deleteDoc(doc(db, "appointments", id));
-      } catch (e) {
-        alert("Lỗi xoá: " + e.message);
-      }
-    }
-  };
-
-  // HÀM ĐỔ DỮ LIỆU LÊN FORM ĐỂ SỬA (EDIT)
-  window.editAppointment = function(id) {
-    const item = globalAppointments.find(a => a.id === id);
-    if (!item) return;
-
-    document.getElementById('editing-id').value = item.id;
-    document.getElementById('input-name').value = item.name;
-    document.getElementById('input-phone').value = item.phone;
-    document.getElementById('input-date').value = item.date;
-    document.getElementById('input-time').value = item.time;
-    document.getElementById('input-service').value = item.service;
-    document.getElementById('input-note').value = item.note || '';
-
-    document.getElementById('form-title').innerText = "Chỉnh sửa lịch hẹn";
-    document.getElementById('btn-submit-label').innerText = "Cập nhật";
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // HIỂN THỊ VÀ LỌC LỊCH HẸN
-  window.filterAppointments = function() {
-    const keyword = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
-    const filtered = globalAppointments.filter(i => 
-      i.name.toLowerCase().includes(keyword) || i.phone.includes(keyword)
-    );
-    renderAppointments(filtered);
-  };
-
-  function renderAppointments(list) {
-    const container = document.getElementById('appointment-list');
-    const countEl = document.getElementById('appt-count');
-
-    countEl.innerText = `${list.length} lịch hẹn`;
-
-    if (list.length === 0) {
-      container.innerHTML = '<div class="empty-msg">Không tìm thấy lịch hẹn nào.</div>';
-      return;
-    }
-
-    container.innerHTML = list.map(item => `
-      <div class="appointment-item">
-        <div class="appt-info">
-          <span class="appt-time">⏰ ${item.time} - Ngày: ${item.date}</span>
-          <h4>👤 ${item.name} - 📞 ${item.phone}</h4>
-          <p>💅 <strong>Dịch vụ:</strong> ${item.service}</p>
-          ${item.note ? `<p>📝 <strong>Ghi chú:</strong> ${item.note}</p>` : ''}
-        </div>
-        <div class="item-actions">
-          <button class="btn-edit" onclick="editAppointment('${item.id}')">Sửa</button>
-          <button class="btn-delete" onclick="deleteAppointment('${item.id}')">Xoá</button>
-        </div>
-      </div>
-    `).join('');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-msg">${selectedDate ? 'Không có lịch hẹn nào trong ngày ' + selectedDate : 'Chưa có lịch hẹn nào.'}</div>`;
+    return;
   }
-</script>
 
-<script>
-// NLP AI XỬ LÝ NHANH
+  container.innerHTML = filtered.map(item => `
+    <div class="appointment-item">
+      <div class="appt-info">
+        <span class="appt-time">⏰ ${item.time} - Ngày: ${item.date}</span>
+        <h4>👤 ${item.name} - 📞 ${item.phone}</h4>
+        <p>💅 <strong>Dịch vụ:</strong> ${item.service}</p>
+        ${item.note ? `<p>📝 <strong>Ghi chú:</strong> ${item.note}</p>` : ''}
+      </div>
+      <div class="item-actions">
+        <button class="btn-edit" onclick="editAppointment(${item.id})">Sửa</button>
+        <button class="btn-delete" onclick="deleteAppointment(${item.id})">Xoá</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearFilter() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('filter-date').value = '';
+  renderAppointments();
+}
+
+// --- 6. AI PHÂN TÍCH TỰ ĐỘNG ---
 function handleSmartAnalysis() {
   const text = document.getElementById('ai-input').value.trim();
   if (!text) return;
@@ -320,8 +298,13 @@ function resetForm() {
   document.getElementById('editing-id').value = '';
   document.getElementById('ai-input').value = '';
   document.getElementById('form-title').innerText = "Thêm khách hẹn";
-  document.getElementById('btn-submit-label').innerText = "Lưu Lên Cloud";
+  document.getElementById('btn-submit-label').innerText = "Lưu Lịch Hẹn";
 }
+
+// Tự động tải dữ liệu khi vừa mở hoặc F5 lại trang
+window.onload = function() {
+  renderAppointments();
+};
 </script>
 
 </body>
