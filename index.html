@@ -60,7 +60,7 @@
     .date-details { font-size: 12px; color: var(--primary-color); font-weight: 600; line-height: 1.2; }
     .sub-date { font-size: 11px; color: var(--text-muted); font-weight: 400; }
 
-    /* TAB NAV (CHỈ CÒN HOY VÀ MAÑANA) */
+    /* TAB NAV */
     .tab-nav { display: flex; background: var(--bg-color); border-bottom: 1px solid var(--border-color); }
     .tab-item { flex: 1; text-align: center; padding: 12px 0; font-size: 14px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
     .tab-item.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
@@ -139,7 +139,6 @@
 
     window.globalAppointments = [];
 
-    // TẢI TOÀN BỘ DỮ LIỆU TỪ LỚN ĐẾN BÉ ĐỂ LƯU TRỮ VĨNH VIỄN
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
@@ -199,7 +198,7 @@
         <button class="btn-action-top">
           📅 <span>Ver Calendario</span>
         </button>
-        <input type="date" id="top-date-picker" onchange="onDateSelectedFromPicker(this.value)">
+        <input type="date" id="top-date-picker" lang="es" onchange="onDateSelectedFromPicker(this.value)">
       </div>
     </div>
   </header>
@@ -213,7 +212,7 @@
     </div>
   </div>
 
-  <!-- TAB NAV (CHỈ CÒN HOY VÀ MAÑANA) -->
+  <!-- TAB NAV -->
   <div class="tab-nav">
     <div class="tab-item active" id="tab-hoy" onclick="selectQuickTab('hoy')">Hoy</div>
     <div class="tab-item" id="tab-manana" onclick="selectQuickTab('manana')">Mañana</div>
@@ -250,7 +249,7 @@
       <div class="ai-box">
         <div class="ai-header">✨ ASISTENTE RÁPIDO IA</div>
         <div class="ai-input-wrapper">
-          <input type="text" id="ai-smart-input" placeholder="Mañana teléfono 612123456 cita a las 15:30" onkeyup="if(event.key==='Enter') runAIParsing()">
+          <input type="text" id="ai-smart-input" placeholder="Ej: Mañana María cita 5:30 num 631 95 95 completo" onkeyup="if(event.key==='Enter') runAIParsing()">
           <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Analizar IA</button>
         </div>
       </div>
@@ -271,7 +270,7 @@
         <div class="form-row form-group">
           <div class="form-col">
             <label>Fecha</label>
-            <input type="date" id="input-date">
+            <input type="date" id="input-date" lang="es">
           </div>
           <div class="form-col">
             <label>Hora</label>
@@ -432,7 +431,7 @@
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  /* ANALIZADOR DE IA EN ESPAÑOL */
+  /* BỘ PHÂN TÍCH IA THÔNG MINH CHO TIẾNG TÂY BAN NHA */
   function runAIParsing() {
     let str = document.getElementById('ai-smart-input').value.trim();
     if (!str) return;
@@ -443,31 +442,40 @@
     let targetMonth = now.getMonth();
     let targetDay = now.getDate();
 
-    // 1. TELÉFONO
-    let phoneMatch = workingStr.match(/\b\d{4,11}\b/);
+    // 1. TÁCH SỐ ĐIỆN THOẠI (Ví dụ: 631 95 95, 612123456)
+    let phoneMatch = workingStr.match(/(?:num|núm|número|numero|tel|teléfono|telefono)?\s*([679]\d{2}[\s.-]?\d{2,3}[\s.-]?\d{2,3})/i);
     if (phoneMatch) {
-      document.getElementById('input-phone').value = phoneMatch[0];
+      let rawPhone = phoneMatch[1].replace(/[\s.-]/g, '');
+      document.getElementById('input-phone').value = rawPhone;
       workingStr = workingStr.replace(phoneMatch[0], ' ');
     }
 
-    // 2. HORA
+    // 2. TÁCH GIỜ (Tự động chuyển 5:30 thành 17:30 nếu không ghi AM)
     let isPM = /tarde|noche|pm/i.test(workingStr);
-    let timeMatch = workingStr.match(/(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:h|pm|am|hs|hrs)/i);
+    let timeMatch = workingStr.match(/(?:a las\s*)?(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:h|pm|am|hs|hrs)/i);
     
     if (timeMatch) {
       let h = parseInt(timeMatch[1] || timeMatch[3], 10);
       let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-      if (isPM && h < 12) h += 12;
+      
+      // Nếu giờ từ 1 đến 6 và không ghi AM -> tự hiểu là PM (Giờ chiều)
+      if ((isPM || (h >= 1 && h <= 6)) && h < 12) {
+        h += 12;
+      }
+      
       if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
         document.getElementById('input-time').value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       }
       workingStr = workingStr.replace(timeMatch[0], ' ');
     }
 
-    // 3. FECHA
+    // 3. TÁCH NGÀY (Mañana, Hoy, día X)
     if (/mañana/i.test(workingStr)) {
       targetDay = now.getDate() + 1;
       workingStr = workingStr.replace(/mañana/gi, ' ');
+    } else if (/hoy/i.test(workingStr)) {
+      targetDay = now.getDate();
+      workingStr = workingStr.replace(/hoy/gi, ' ');
     } else {
       let dayMatch = workingStr.match(/(?:día|dia)\s*(\d{1,2})/i);
       if (dayMatch) {
@@ -476,25 +484,33 @@
         workingStr = workingStr.replace(dayMatch[0], ' ');
       }
     }
-    
     let resultDateObj = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resultDateObj);
 
-    // 4. SERVICIO
-    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "uñas", "relleno", "acrilico"];
+    // 4. TÁCH DỊCH VỤ (Completo, Relleno, Acrílico, Uñas, Gel, Pedicura, Manicura)
+    let servicesMap = [
+      { key: /completo/i, val: "Set Completo" },
+      { key: /relleno/i, val: "Relleno Acrílico" },
+      { key: /acrilico|acrílico/i, val: "Uñas de Acrílico" },
+      { key: /french|francesa/i, val: "Uñas Francesas" },
+      { key: /pedicura|pedicure/i, val: "Pedicura" },
+      { key: /manicura|manicure/i, val: "Manicura" },
+      { key: /gel/i, val: "Esmaltado Permanente Gel" }
+    ];
+
     let foundService = "";
-    for (let s of servicesList) {
-      if (new RegExp('\\b' + s + '\\b', 'i').test(workingStr)) {
-        foundService = s.charAt(0).toUpperCase() + s.slice(1);
-        workingStr = workingStr.replace(new RegExp('\\b' + s + '\\b', 'gi'), ' ');
+    for (let s of servicesMap) {
+      if (s.key.test(workingStr)) {
+        foundService = s.val;
+        workingStr = workingStr.replace(s.key, ' ');
         break;
       }
     }
     document.getElementById('input-service').value = foundService || 'Servicio de Uñas';
 
-    // 5. NOMBRE
+    // 5. TÁCH TÊN KHÁCH HÀNG (Loại bỏ câu từ thừa)
     let cleanName = workingStr
-      .replace(/teléfono|telefono|hora|a las|con|cita|el|día|dia/gi, ' ')
+      .replace(/tiene|cita|en|núm|num|número|numero|lo|hace|con|el|la|de|para|a|las/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
