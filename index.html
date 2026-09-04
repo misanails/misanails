@@ -23,9 +23,36 @@
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
     .header-actions { display: flex; gap: 8px; align-items: center; }
     
-    /* BOTÓN VER CALENDARIO */
-    .btn-action-top { background: #EFE4DC; border: 1px solid #D5C7BC; border-radius: 14px; padding: 5px 12px; font-size: 11px; font-weight: 700; color: var(--primary-color); cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .btn-action-top:active { background: #E0D4C8; }
+    /* BOTÓN VER CALENDARIO PARI DI DỘNG */
+    .btn-action-top-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .btn-action-top { 
+      background: #EFE4DC; 
+      border: 1px solid #D5C7BC; 
+      border-radius: 14px; 
+      padding: 6px 12px; 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: var(--primary-color); 
+      display: flex; 
+      align-items: center; 
+      gap: 4px; 
+      pointer-events: none; /* Tránh cản trở chạm vào input phía trên */
+    }
+
+    .btn-action-top-wrapper input[type="date"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
 
     /* DATE BANNER */
     .date-banner { padding: 4px 20px 16px; background: var(--bg-color); display: flex; align-items: baseline; gap: 8px; }
@@ -89,8 +116,6 @@
     .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
     .btn-modal-cancel { flex: 1; background: #FFF; border: 1px solid #E5DCD3; padding: 12px; border-radius: 8px; font-weight: 700; color: #665E57; cursor: pointer; text-align: center; font-size: 13px; }
     .btn-modal-save { flex: 1; background: var(--primary-color); border: none; padding: 12px; border-radius: 8px; font-weight: 700; color: #FFF; cursor: pointer; text-align: center; font-size: 13px; }
-
-    #hidden-date-picker { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
   </style>
 
   <!-- Firebase JS SDK -->
@@ -168,13 +193,13 @@
   <header>
     <div class="logo-title">AGENDA DE UÑAS</div>
     <div class="header-actions">
-      <!-- BOTÓN SELECCIONAR FECHA / VER CALENDARIO -->
-      <button class="btn-action-top" onclick="openDatePicker()">
-        📅 <span>Ver Calendario</span>
-      </button>
-
-      <!-- INPUT OCULTO PARA ABRIR CALENDARIO -->
-      <input type="date" id="hidden-date-picker" onchange="onDateSelectedFromPicker(this.value)">
+      <!-- NÚT MỞ LỊCH ĐÃ ĐƯỢC TỐI ƯU TRỰC TIẾP CHO DI ĐỘNG -->
+      <div class="btn-action-top-wrapper">
+        <button class="btn-action-top">
+          📅 <span>Ver Calendario</span>
+        </button>
+        <input type="date" id="top-date-picker" onchange="onDateSelectedFromPicker(this.value)">
+      </div>
     </div>
   </header>
 
@@ -287,17 +312,6 @@
     return `${year}-${month}-${day}`;
   }
 
-  /* VER CALENDARIO */
-  function openDatePicker() {
-    const hiddenPicker = document.getElementById('hidden-date-picker');
-    hiddenPicker.value = window.currentSelectedDate;
-    if (hiddenPicker.showPicker) {
-      hiddenPicker.showPicker();
-    } else {
-      hiddenPicker.click();
-    }
-  }
-
   function onDateSelectedFromPicker(val) {
     if (!val) return;
     const parts = val.split('-');
@@ -314,6 +328,7 @@
     document.getElementById('view-title').innerText = `${dayShort}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`;
     
     window.currentSelectedDate = formatDateStr(selectedDate);
+    document.getElementById('top-date-picker').value = window.currentSelectedDate;
     renderAppointments();
   }
 
