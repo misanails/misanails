@@ -54,7 +54,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // THÔNG TIN FIREBASE ĐÃ ĐƯỢC TỰ ĐỘNG ĐIỀN TỪ ẢNH CỦA BẠN
     const firebaseConfig = {
       apiKey: "AIzaSyBwzbPL60nM2WaLnFXwuZdBo_uP65X5Ck",
       authDomain: "misa-nails.firebaseapp.com",
@@ -93,7 +92,7 @@
       const itemData = {
         name: document.getElementById('input-name').value.trim() || 'Khách không tên',
         phone: document.getElementById('input-phone').value.trim() || 'Chưa có SĐT',
-        date: document.getElementById('input-date').value || new Date().toISOString().split('T')[0],
+        date: document.getElementById('input-date').value || getTodayStr(),
         time: document.getElementById('input-time').value || '--:--',
         service: document.getElementById('input-service').value.trim() || 'Dịch vụ chung',
         note: document.getElementById('input-note').value.trim() || ''
@@ -133,7 +132,7 @@
 
     <div class="ai-box">
       <span class="ai-title">✨ NÓI CẢ CÂU HOẶC GÕ TỰ DO ĐỂ AI TỰ ĐIỀN Ô:</span>
-      <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="minh dt 090909090 hen 12h28 lam chan nuoc"></textarea>
+      <textarea id="ai-input" class="ai-textarea" rows="2" placeholder="VD: minh dt 090909090 hen ngay mai 12h28 lam chan nuoc"></textarea>
       <button type="button" class="btn-ai" id="btn-ai-action">✨ AI Phân Tích & Tự Điền Ô</button>
     </div>
 
@@ -152,7 +151,7 @@
 
       <div class="form-row form-group">
         <div class="form-col">
-          <label>Ngày hẹn (Lưu trước vài tháng thoải mái)</label>
+          <label>Ngày hẹn</label>
           <input type="date" id="input-date">
         </div>
         <div class="form-col">
@@ -200,6 +199,14 @@
 </div>
 
 <script>
+function getTodayStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // CHỈNH SỬA LỊCH HẸN
 window.editItem = function(docId) {
   const item = window.globalAppointments.find(a => a.docId === docId);
@@ -233,7 +240,14 @@ function renderList() {
   const container = document.getElementById('appointment-list');
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-msg">${dateVal ? 'Không có lịch hẹn cho ngày ' + dateVal : 'Chưa có lịch hẹn nào trên Firebase.'}</div>`;
+    const today = getTodayStr();
+    let msg = 'Chưa có lịch hẹn nào.';
+    if (dateVal === today) {
+      msg = 'Hôm nay chưa có lịch hẹn nào.';
+    } else if (dateVal) {
+      msg = `Không có lịch hẹn cho ngày ${dateVal}`;
+    }
+    container.innerHTML = `<div class="empty-msg">${msg}</div>`;
     return;
   }
 
@@ -253,17 +267,54 @@ function renderList() {
   `).join('');
 }
 
-// AI PHÂN TÍCH TỰ ĐIỀN
+// AI PHÂN TÍCH TỰ ĐIỀN (CÓ NHẬN DIỆN NGÀY THÁNG NÂNG CAO)
 document.getElementById('btn-ai-action').addEventListener('click', function() {
   const text = document.getElementById('ai-input').value.trim();
   if (!text) return;
 
   let raw = text;
   let phone = '', time = '', name = '', service = '';
+  let dateStr = '';
 
+  // 1. Phân tích Số điện thoại
   const phoneMatch = raw.match(/(0\d{5,10})/);
-  if (phoneMatch) { phone = phoneMatch[0]; raw = raw.replace(phone, ''); }
+  if (phoneMatch) { 
+    phone = phoneMatch[0]; 
+    raw = raw.replace(phone, ''); 
+  }
 
+  // 2. Phân tích Ngày tháng
+  const today = new Date();
+  
+  if (/ngay mai|ngày mai|hom sau|hôm sau/i.test(raw)) {
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    dateStr = tomorrow.toISOString().split('T')[0];
+    raw = raw.replace(/ngay mai|ngày mai|hom sau|hôm sau/gi, '');
+  } else if (/hom nay|hôm nay/i.test(raw)) {
+    dateStr = getTodayStr();
+    raw = raw.replace(/hom nay|hôm nay/gi, '');
+  } else {
+    // Tìm kiểu ngày/tháng: "15/9", "15-9", "ngay 15 thang 9", "ngay 15"
+    const fullDateMatch = raw.match(/(?:ngay|ngày)?\s*(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{4}))?/i);
+    const dayOnlyMatch = raw.match(/(?:ngay|ngày)\s*(\d{1,2})/i);
+
+    if (fullDateMatch) {
+      const d = fullDateMatch[1].padStart(2, '0');
+      const m = fullDateMatch[2].padStart(2, '0');
+      const y = fullDateMatch[3] || today.getFullYear();
+      dateStr = `${y}-${m}-${d}`;
+      raw = raw.replace(fullDateMatch[0], '');
+    } else if (dayOnlyMatch) {
+      const d = dayOnlyMatch[1].padStart(2, '0');
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const y = today.getFullYear();
+      dateStr = `${y}-${m}-${d}`;
+      raw = raw.replace(dayOnlyMatch[0], '');
+    }
+  }
+
+  // 3. Phân tích Giờ hẹn
   const timeMatch = raw.match(/(\d{1,2}(?:[:h]\d{2}|h)?)/i);
   if (timeMatch) {
     let t = timeMatch[0].toLowerCase().replace('h', ':');
@@ -273,21 +324,20 @@ document.getElementById('btn-ai-action').addEventListener('click', function() {
     raw = raw.replace(timeMatch[0], '');
   }
 
-  let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|dt|đt|làm|lam)/gi, '').replace(/\s+/g, ' ').trim();
+  // 4. Phân tích Tên và Dịch vụ từ đoạn còn lại
+  let clean = raw.replace(/(hen|hẹn|đặt|dat|lịch|lich|lúc|luc|dt|đt|làm|lam|ngày|ngay)/gi, '').replace(/\s+/g, ' ').trim();
   const words = clean.split(' ');
   if (words.length > 0) {
     name = words[0];
     service = words.slice(1).join(' ');
   }
 
+  // Điền dữ liệu phân tích vào các ô
   document.getElementById('input-name').value = name;
   document.getElementById('input-phone').value = phone;
   document.getElementById('input-time').value = time;
   document.getElementById('input-service').value = service;
-  
-  if (!document.getElementById('input-date').value) {
-    document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
-  }
+  document.getElementById('input-date').value = dateStr || getTodayStr();
 });
 
 function resetForm() {
@@ -296,19 +346,25 @@ function resetForm() {
   document.getElementById('ai-input').value = '';
   document.getElementById('form-title').innerText = "Thêm lịch hẹn mới";
   document.getElementById('btn-submit-label').innerText = "Lưu Lên Firebase";
+  document.getElementById('input-date').value = getTodayStr();
 }
 
 document.getElementById('btn-reset').addEventListener('click', resetForm);
 document.getElementById('search-input').addEventListener('input', renderList);
 document.getElementById('filter-date').addEventListener('change', renderList);
+
+// Bấm "Xem Tất Cả Lịch" -> Bỏ lọc ngày để xem toàn bộ
 document.getElementById('btn-clear-filter').addEventListener('click', function() {
   document.getElementById('search-input').value = '';
   document.getElementById('filter-date').value = '';
   renderList();
 });
 
+// KHI TRANG KHỞI CHẠY: MẶC ĐỊNH LỌC THEO NGÀY HÔM NAY
 window.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('input-date').value = new Date().toISOString().split('T')[0];
+  const today = getTodayStr();
+  document.getElementById('input-date').value = today;
+  document.getElementById('filter-date').value = today; // Mặc định chỉ lọc ngày hôm nay
 });
 </script>
 
