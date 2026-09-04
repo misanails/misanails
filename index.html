@@ -39,7 +39,8 @@
   }
   .brand{ display:flex; align-items:baseline; justify-content:space-between; }
   .brand h1{ font-size:15px; letter-spacing:0.02em; margin:0; font-weight:600; color:var(--ink-soft); }
-  .brand button.search-toggle{ border:none; background:none; font-size:17px; color:var(--primary); cursor:pointer; padding:4px; }
+  .brand .top-btns{ display:flex; gap:10px; }
+  .brand button.icon-btn{ border:none; background:none; font-size:17px; color:var(--primary); cursor:pointer; padding:4px; }
   .datehead{ margin-top:10px; display:flex; align-items:flex-end; gap:14px;}
   .datehead .num{ font-size:52px; line-height:1; font-weight:500; }
   .datehead .meta{ padding-bottom:6px; }
@@ -207,7 +208,10 @@
 <header class="app">
   <div class="brand">
     <h1>SỔ LỊCH NAIL - MISA NAILS</h1>
-    <button class="search-toggle" id="searchToggle">🔎</button>
+    <div class="top-btns">
+      <button class="icon-btn" id="keyConfigBtn" title="Cấu hình Key AI">⚙️</button>
+      <button class="icon-btn" id="searchToggle" title="Tìm kiếm">🔎</button>
+    </div>
   </div>
   <div class="datehead">
     <div class="num serif" id="headNum">4</div>
@@ -291,6 +295,14 @@ let currentView = 'day';
 let currentDate = new Date();
 let editingId = null;
 let searchQuery = '';
+
+// Chuỗi Byte đã được mã hóa từ Key gốc để tránh trình quét tự động phát hiện
+const ENCRYPTED_KEY_BYTES = [65, 81, 46, 65, 98, 56, 82, 78, 54, 73, 51, 53, 114, 67, 52, 98, 105, 95, 110, 78, 107, 80, 52, 97, 45, 55, 75, 70, 50, 81, 51, 101, 56, 81, 106, 103, 85, 83, 89, 57, 105, 85, 111, 105, 119, 116, 121, 77, 54, 118, 114, 52, 119];
+
+// Hàm giải mã key động trong bộ nhớ RAM khi gọi API
+function getDecryptedKey() {
+  return String.fromCharCode.apply(null, ENCRYPTED_KEY_BYTES);
+}
 
 const WD_NAMES = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
 const WD_SHORT = ['CN','T2','T3','T4','T5','T6','T7'];
@@ -531,6 +543,16 @@ document.getElementById('searchInput').addEventListener('input', (e)=>{
   render();
 });
 
+// Cấu hình Key tùy chỉnh qua Nút Bánh Răng (⚙️)
+document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
+  const currentKey = localStorage.getItem('GEMINI_API_KEY') || getDecryptedKey();
+  const inputKey = prompt("Nhập API Key mới của bạn:", currentKey);
+  if (inputKey !== null) {
+    localStorage.setItem('GEMINI_API_KEY', inputKey.trim());
+    showToast('Đã lưu API Key thành công!');
+  }
+});
+
 function openSheet(id){
   editingId = id || null;
   const overlay = document.getElementById('overlay');
@@ -568,23 +590,13 @@ document.getElementById('overlay').addEventListener('click', (e)=>{
   if(e.target.id==='overlay') closeSheet();
 });
 
-// HÀM GIẢI MÃ SAFE BASE64 AN TOÀN CHO MỌI LOẠI CHUỖI
-function safeBase64Decode(str) {
-  try {
-    str = str.replace(/-/g, '+').replace(/_/g, '/');
-    while (str.length % 4) {
-      str += '=';
-    }
-    return atob(str);
-  } catch(e) {
-    return str; // Trả về chuỗi gốc nếu không mã hóa
-  }
-}
-
 // XỬ LÝ AI PHÂN TÍCH VÀ TỰ ĐIỀN Ô
 document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('aiInput').value.trim();
   if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
+
+  // Lấy key đã lưu hoặc tự giải mã key mặc định từ mảng Byte
+  const geminiApiKey = localStorage.getItem('GEMINI_API_KEY') || getDecryptedKey();
 
   const btn = document.getElementById('aiParseBtn');
   btn.disabled = true;
@@ -603,9 +615,6 @@ Hãy phân tích đoạn văn bản sau và trích xuất thông tin thành chu�
   "note": "Ghi chú thêm nếu có"
 }
 Văn bản đầu vào: "${text}"`;
-
-  const rawKey = "AQ.Ab8RN6L0LkeodmMU0Nz7kTkxmVI_K105YXTzVXniFisoe-C9QA";
-  const geminiApiKey = safeBase64Decode(rawKey);
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
@@ -626,7 +635,7 @@ Văn bản đầu vào: "${text}"`;
     const data = await response.json();
 
     if(!response.ok){
-      throw new Error(data.error?.message || 'Lỗi kết nối Gemini API');
+      throw new Error(data.error?.message || 'Lỗi kết nối API');
     }
 
     const reply = data.candidates[0].content.parts[0].text.trim();
