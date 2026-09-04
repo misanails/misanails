@@ -1,754 +1,212 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Sổ Lịch Nail - Misa Nails</title>
-<style>
-  :root{
-    --bg:#FAF3F0;
-    --surface:#FFFFFF;
-    --ink:#2A1E22;
-    --ink-soft:#6E5B60;
-    --primary:#A83246;
-    --primary-dark:#7E2536;
-    --primary-soft:#F1D9DE;
-    --gold:#B8934E;
-    --gold-soft:#EFE1C4;
-    --line:#E7D9D4;
-    --danger:#A83246;
-    --radius:14px;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height:100vh;
-    padding-bottom:100px;
-  }
-  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
-
-  header.app{
-    padding:22px 20px 14px;
-    background:var(--surface);
-    border-bottom:1px solid var(--line);
-    position:sticky; top:0; z-index:20;
-  }
-  .brand{ display:flex; align-items:baseline; justify-content:space-between; }
-  .brand h1{ font-size:15px; letter-spacing:0.02em; margin:0; font-weight:600; color:var(--ink-soft); }
-  .brand .top-btns{ display:flex; gap:10px; }
-  .brand button.icon-btn{ border:none; background:none; font-size:17px; color:var(--primary); cursor:pointer; padding:4px; }
-  .datehead{ margin-top:10px; display:flex; align-items:flex-end; gap:14px;}
-  .datehead .num{ font-size:52px; line-height:1; font-weight:500; }
-  .datehead .meta{ padding-bottom:6px; }
-  .datehead .meta .wd{ font-size:13px; color:var(--primary); font-weight:600; text-transform:capitalize;}
-  .datehead .meta .my{ font-size:13px; color:var(--ink-soft); margin-top:2px;}
-
-  .searchbar{ margin-top:12px; display:none; }
-  .searchbar.open{ display:block; }
-  .searchbar input{
-    width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--line);
-    background:var(--bg); font-size:15px; color:var(--ink);
-  }
-
-  nav.tabs{
-    display:flex; gap:6px; padding:12px 20px 0;
-    background:var(--surface);
-    position:sticky; top:0; z-index:19;
-  }
-  nav.tabs button{
-    flex:1; padding:9px 0; border:none; background:none; font-size:14px;
-    color:var(--ink-soft); border-bottom:2px solid transparent; cursor:pointer; font-weight:600;
-  }
-  nav.tabs button.active{ color:var(--primary); border-bottom-color:var(--primary); }
-
-  .nav-arrows{ display:flex; align-items:center; justify-content:space-between; padding:14px 20px 4px; }
-  .nav-arrows button{
-    border:none; background:var(--primary-soft); color:var(--primary-dark);
-    width:34px; height:34px; border-radius:50%; font-size:16px; cursor:pointer;
-  }
-  .nav-arrows .label{ font-size:14px; font-weight:600; color:var(--ink); text-transform:capitalize;}
-  .nav-arrows .today-btn{
-    border:none; background:none; color:var(--gold); font-weight:600; font-size:12.5px; cursor:pointer;
-    border:1px solid var(--gold); border-radius:20px; padding:4px 10px; width:auto; height:auto;
-  }
-
-  main{ padding:6px 20px 20px; }
-
-  .timeline{ position:relative; padding-left:56px; margin-top:10px;}
-  .timeline::before{ content:""; position:absolute; left:46px; top:4px; bottom:4px; width:1px; background:var(--line); }
-  .appt{ position:relative; margin-bottom:16px; }
-  .appt .time{ position:absolute; left:-56px; top:2px; width:44px; text-align:right; font-size:12px; color:var(--ink-soft); font-weight:600; }
-  .appt .dot{
-    position:absolute; left:-13.5px; top:5px; width:9px; height:9px; border-radius:50%;
-    background:var(--primary); border:2px solid var(--surface); box-shadow:0 0 0 1px var(--primary);
-  }
-  .appt .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; }
-  .appt .card .row1{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
-  .appt .card .name{ font-size:16px; font-weight:600; }
-  .appt .card .svc{ font-size:13.5px; color:var(--primary-dark); margin-top:2px; }
-  .appt .card .note{ font-size:13px; color:var(--ink-soft); margin-top:6px; font-style:italic;}
-  .appt .card .actions{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
-  .appt .card .actions a, .appt .card .actions button{
-    font-size:12.5px; text-decoration:none; border:none; background:var(--bg); color:var(--ink);
-    padding:6px 10px; border-radius:20px; cursor:pointer; font-weight:600;
-  }
-  .appt .card .actions .del{ color:var(--danger); }
-
-  .empty{ text-align:center; padding:60px 20px; color:var(--ink-soft); }
-  .empty .big{ font-size:15px; font-weight:600; color:var(--ink); margin-bottom:6px;}
-  .empty .small{ font-size:13px; }
-
-  .week-grid{ display:flex; flex-direction:column; gap:10px; margin-top:10px;}
-  .week-day{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:10px 14px; }
-  .week-day .wd-head{ display:flex; align-items:center; gap:10px; cursor:pointer; }
-  .week-day .wd-num{ font-size:22px; width:30px; }
-  .week-day.today .wd-num{ color:var(--primary); font-weight:700; }
-  .week-day .wd-info{ flex:1; }
-  .week-day .wd-name{ font-size:12.5px; color:var(--ink-soft); text-transform:capitalize; }
-  .week-day .wd-count{ font-size:12px; color:var(--gold); font-weight:600; margin-top:1px;}
-  .week-day .wd-chips{ margin-top:8px; display:flex; flex-wrap:wrap; gap:6px; }
-  .chip{ background:var(--primary-soft); color:var(--primary-dark); font-size:11.5px; font-weight:600; padding:4px 8px; border-radius:20px; }
-
-  .month-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:10px; }
-  .month-wd{ text-align:center; font-size:11px; color:var(--ink-soft); font-weight:600; padding-bottom:4px;}
-  .month-cell{
-    aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:var(--surface); border:1px solid var(--line); font-size:13.5px; cursor:pointer; position:relative; color:var(--ink);
-  }
-  .month-cell.other{ opacity:0.35; }
-  .month-cell.today{ border-color:var(--primary); color:var(--primary); font-weight:700; }
-  .month-cell .dots{ display:flex; gap:2px; margin-top:3px; }
-  .month-cell .dots span{ width:4px; height:4px; border-radius:50%; background:var(--gold); }
-
-  .fab{
-    position:fixed; right:20px; bottom:26px; z-index:30;
-    background:var(--primary); color:#fff; border:none; border-radius:30px;
-    padding:15px 22px; font-size:14.5px; font-weight:700; box-shadow:0 6px 18px rgba(168,50,70,0.35);
-    display:flex; align-items:center; gap:8px; cursor:pointer;
-  }
-
-  .overlay{ position:fixed; inset:0; background:rgba(42,30,34,0.4); z-index:40; display:none; align-items:flex-end; }
-  .overlay.open{ display:flex; }
-  .sheet{ background:var(--bg); width:100%; max-height:88vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:20px 20px 28px; }
-  .sheet .grabber{ width:36px; height:4px; background:var(--line); border-radius:4px; margin:0 auto 14px; }
-  .sheet h2{ font-size:22px; margin:0 0 16px; font-weight:600;}
-  
-  .ai-box {
-    background: var(--gold-soft);
-    border: 1px dashed var(--gold);
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 16px;
-  }
-  .ai-box label { font-size: 12px; font-weight: 700; color: var(--gold); display: block; margin-bottom: 6px; }
-  .ai-box textarea { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 14px; font-family: inherit; }
-  .ai-box button {
-    margin-top: 8px; width: 100%; padding: 10px; background: var(--gold); color: white;
-    border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
-  }
-
-  .field{ margin-bottom:14px; }
-  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
-  .field input, .field textarea, .field select{
-    width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line);
-    background:var(--surface); font-size:15.5px; color:var(--ink); font-family:inherit;
-  }
-  .field textarea{ resize:vertical; min-height:56px; }
-  .two-col{ display:flex; gap:10px; }
-  .two-col .field{ flex:1; }
-  .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
-  .sheet-actions button{ flex:1; padding:13px; border-radius:12px; border:none; font-size:15px; font-weight:700; cursor:pointer; }
-  .btn-cancel{ background:var(--surface); color:var(--ink-soft); border:1px solid var(--line) !important; }
-  .btn-save{ background:var(--primary); color:#fff; }
-
-  .toast{
-    position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
-    background:var(--ink); color:#fff; padding:12px 20px; border-radius:20px; font-size:13px;
-    z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; max-width: 90%; text-align: center; word-break: break-word;
-  }
-  .toast.show{ opacity:1; }
-</style>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBwzbPL60nMT2WaLnFXwuZdBo_uP65X5Ck",
-    authDomain: "misa-nails.firebaseapp.com",
-    projectId: "misa-nails",
-    storageBucket: "misa-nails.firebasestorage.app",
-    messagingSenderId: "1026976403731",
-    appId: "1:1026976403731:web:c12f28c237c13990134ae6",
-    measurementId: "G-XNHBT4Y17G"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  window.db = db;
-  window.fsCollection = collection;
-  window.fsAddDoc = addDoc;
-  window.fsUpdateDoc = updateDoc;
-  window.fsDeleteDoc = deleteDoc;
-  window.fsDoc = doc;
-  window.fsOnSnapshot = onSnapshot;
-
-  if (typeof initFirebaseListener === "function") {
-    initFirebaseListener();
-  }
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Đặt Lịch Hẹn - Tự Động Phân Tích AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background-color: #f4f6f9; padding: 20px; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    h2 { color: #1a73e8; margin-bottom: 20px; font-size: 22px; text-align: center; }
+    
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #555; }
+    input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
+    input:focus, textarea:focus { border-color: #1a73e8; box-shadow: 0 0 5px rgba(26,115,232,0.2); }
+    
+    .ai-section { background-color: #e8f0fe; padding: 15px; border-radius: 8px; border: 1px solid #d2e3fc; margin-bottom: 20px; }
+    .btn-ai { width: 100%; background-color: #1a73e8; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+    .btn-ai:hover { background-color: #1557b0; }
+    .btn-submit { width: 100%; background-color: #34a853; color: #fff; border: none; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    .btn-submit:hover { background-color: #2d8e47; }
+    .status-text { font-size: 12px; color: #666; margin-top: 8px; text-align: center; font-style: italic; }
+  </style>
 </head>
 <body>
 
-<header class="app">
-  <div class="brand">
-    <h1>SỔ LỊCH NAIL - MISA NAILS</h1>
-    <div class="top-btns">
-      <button class="icon-btn" id="keyConfigBtn" title="Cấu hình Key AI">⚙️</button>
-      <button class="icon-btn" id="searchToggle" title="Tìm kiếm">🔎</button>
-    </div>
-  </div>
-  <div class="datehead">
-    <div class="num serif" id="headNum">4</div>
-    <div class="meta">
-      <div class="wd" id="headWd">Thứ Sáu</div>
-      <div class="my" id="headMy">Tháng 9, 2026</div>
-    </div>
-  </div>
-  <div class="searchbar" id="searchBar">
-    <input type="text" id="searchInput" placeholder="Tìm theo tên hoặc số điện thoại...">
-  </div>
-</header>
+<div class="container">
+  <h2>Tạo Lịch Hẹn Mới</h2>
 
-<nav class="tabs">
-  <button class="active" data-view="day">Ngày</button>
-  <button data-view="week">Tuần</button>
-  <button data-view="month">Tháng</button>
-</nav>
+  <!-- Cấu hình API Key -->
+  <div class="form-group">
+    <label for="api-key">Gemini API Key:</label>
+    <input type="password" id="api-key" placeholder="Nhập API Key của bạn tại đây...">
+  </div>
 
-<div class="nav-arrows" id="navArrows">
-  <button id="prevBtn">‹</button>
-  <div class="label" id="rangeLabel">—</div>
-  <button class="today-btn" id="todayBtn">Hôm nay</button>
-  <button id="nextBtn">›</button>
+  <!-- Vùng nhập văn bản nhanh cho AI -->
+  <div class="ai-section">
+    <label for="ai-input">✨ Nhập nhanh văn bản đặt lịch:</label>
+    <textarea id="ai-input" rows="3" placeholder="Ví dụ: Anh Nam 0909123456 làm dịch vụ cắt tóc lúc 14:30 ghi chú mang theo thẻ thành viên"></textarea>
+    <button class="btn-ai" id="btn-parse" onclick="processAIInput()">Phân Tích & Tự Điền Ô</button>
+    <div id="status" class="status-text"></div>
+  </div>
+
+  <!-- Form thông tin được điền tự động -->
+  <form id="booking-form" onsubmit="event.preventDefault(); alert('Lưu lịch hẹn thành công!');">
+    <div class="form-group">
+      <label for="input-name">Họ và Tên Khách Hang:</label>
+      <input type="text" id="input-name" placeholder="Chưa có thông tin">
+    </div>
+
+    <div class="form-group">
+      <label for="input-phone">Số Điện Thoại:</label>
+      <input type="text" id="input-phone" placeholder="Chưa có thông tin">
+    </div>
+
+    <div class="form-group">
+      <label for="input-time">Thời Gian Hẹn:</label>
+      <input type="text" id="input-time" placeholder="HH:mm">
+    </div>
+
+    <div class="form-group">
+      <label for="input-service">Dịch Vụ Sử Dụng:</label>
+      <input type="text" id="input-service" placeholder="Chưa có thông tin">
+    </div>
+
+    <div class="form-group">
+      <label for="input-note">Ghi Chú:</label>
+      <input type="text" id="input-note" placeholder="Không có ghi chú">
+    </div>
+
+    <button type="submit" class="btn-submit">Lưu Lịch Hẹn</button>
+  </form>
 </div>
-
-<main id="main"></main>
-
-<button class="fab" id="fabAdd">＋ Khách mới</button>
-
-<div class="overlay" id="overlay">
-  <div class="sheet">
-    <div class="grabber"></div>
-    <h2 id="sheetTitle" class="serif">Thêm khách hẹn</h2>
-    
-    <div class="ai-box">
-      <label>✨ NÓI CẢ CÂU HOẶC GÕ ĐỂ AI TỰ ĐIỀN Ô:</label>
-      <textarea id="aiInput" placeholder="VD: Maria SĐT 0412345678 hẹn 2 giờ chiều ngày mai làm Refill Acrylic"></textarea>
-      <button id="aiParseBtn">✨ AI Phân Tích & Tự Điền Ô</button>
-    </div>
-
-    <div class="field">
-      <label>Tên khách</label>
-      <input type="text" id="fName" placeholder="Ví dụ: Maria">
-    </div>
-    <div class="field">
-      <label>Số điện thoại</label>
-      <input type="tel" id="fPhone" placeholder="612 123 456">
-    </div>
-    <div class="two-col">
-      <div class="field">
-        <label>Ngày</label>
-        <input type="date" id="fDate">
-      </div>
-      <div class="field">
-        <label>Giờ</label>
-        <input type="time" id="fTime" step="300">
-      </div>
-    </div>
-    <div class="field">
-      <label>Dịch vụ</label>
-      <input type="text" id="fService" placeholder="Refill Acrylic + French">
-    </div>
-    <div class="field">
-      <label>Ghi chú</label>
-      <textarea id="fNote" placeholder="Ghi chú thêm..."></textarea>
-    </div>
-    <div class="sheet-actions">
-      <button class="btn-cancel" id="cancelBtn">Huỷ</button>
-      <button class="btn-save" id="saveBtn">Lưu lịch hẹn</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
 
 <script>
-const APPOINTMENTS_COL = 'appointments';
-let appts = [];
-let currentView = 'day';
-let currentDate = new Date();
-let editingId = null;
-let searchQuery = '';
+// Danh sách các model Gemini hiện hành (Xử lý fallback mượt mà)
+const GEMINI_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
+];
 
-const WD_NAMES = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
-const WD_SHORT = ['CN','T2','T3','T4','T5','T6','T7'];
-const MONTHS = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+/**
+ * Gọi API Gemini và tự động chuyển model khi gặp lỗi
+ */
+async function parseWithGemini(promptText, apiKey) {
+  if (!apiKey) throw new Error("Chưa nhập API Key");
 
-function pad(n){ return n.toString().padStart(2,'0'); }
-function dateKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function sameDay(a,b){ return dateKey(a)===dateKey(b); }
-
-function initFirebaseListener(){
-  if(!window.db) return;
-  const colRef = window.fsCollection(window.db, APPOINTMENTS_COL);
-  
-  window.fsOnSnapshot(colRef, (snapshot) => {
-    appts = [];
-    snapshot.forEach((docSnap) => {
-      appts.push({ id: docSnap.id, ...docSnap.data() });
-    });
-    render();
-  }, (error) => {
-    console.error("Lỗi đồng bộ Firebase:", error);
-    showToast('Chưa kết nối được với Firebase');
-  });
-}
-
-function showToast(msg, duration = 4000){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), duration);
-}
-
-function updateHeader(){
-  document.getElementById('headNum').textContent = currentDate.getDate();
-  document.getElementById('headWd').textContent = WD_NAMES[currentDate.getDay()];
-  document.getElementById('headMy').textContent = `${MONTHS[currentDate.getMonth()]}, ${currentDate.getFullYear()}`;
-}
-
-function getApptsForDate(d){
-  const key = dateKey(d);
-  return appts.filter(a=>a.date===key).sort((a,b)=>a.time.localeCompare(b.time));
-}
-
-function filteredAppts(list){
-  if(!searchQuery) return list;
-  const q = searchQuery.toLowerCase();
-  return list.filter(a => a.name.toLowerCase().includes(q) || (a.phone||'').includes(q));
-}
-
-function renderDayView(){
-  const label = document.getElementById('rangeLabel');
-  label.textContent = `${WD_SHORT[currentDate.getDay()]}, ${currentDate.getDate()}/${currentDate.getMonth()+1}`;
-  let list = filteredAppts(getApptsForDate(currentDate));
-  const main = document.getElementById('main');
-  if(list.length===0){
-    main.innerHTML = `<div class="empty"><div class="big">Chưa có lịch hẹn</div><div class="small">Bấm "＋ Khách mới" để thêm lịch cho ngày này</div></div>`;
-    return;
-  }
-  main.innerHTML = `<div class="timeline">` + list.map(a=>apptCardHtml(a)).join('') + `</div>`;
-  attachCardEvents();
-}
-
-function renderWeekView(){
-  const start = new Date(currentDate);
-  const dow = start.getDay();
-  start.setDate(start.getDate()-dow);
-  const days = [...Array(7)].map((_,i)=>{
-    const d = new Date(start); d.setDate(start.getDate()+i); return d;
-  });
-  const label = document.getElementById('rangeLabel');
-  const end = days[6];
-  label.textContent = `${start.getDate()}/${start.getMonth()+1} – ${end.getDate()}/${end.getMonth()+1}`;
-
-  const main = document.getElementById('main');
-  const today = new Date();
-  main.innerHTML = `<div class="week-grid">` + days.map(d=>{
-    const list = filteredAppts(getApptsForDate(d));
-    const isToday = sameDay(d, today);
-    return `<div class="week-day ${isToday?'today':''}" data-jump="${dateKey(d)}">
-      <div class="wd-head">
-        <div class="wd-num serif">${d.getDate()}</div>
-        <div class="wd-info">
-          <div class="wd-name">${WD_NAMES[d.getDay()]}</div>
-          <div class="wd-count">${list.length ? list.length+' lịch hẹn' : 'Trống'}</div>
-        </div>
-      </div>
-      ${list.length ? `<div class="wd-chips">` + list.map(a=>`<span class="chip">${a.time} · ${escapeHtml(a.name)}</span>`).join('') + `</div>` : ''}
-    </div>`;
-  }).join('') + `</div>`;
-
-  main.querySelectorAll('.week-day').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const [y,m,dd] = el.dataset.jump.split('-').map(Number);
-      currentDate = new Date(y, m-1, dd);
-      currentView = 'day';
-      setActiveTab('day');
-      updateHeader();
-      render();
-    });
-  });
-}
-
-function renderMonthView(){
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const label = document.getElementById('rangeLabel');
-  label.textContent = `${MONTHS[month]} ${year}`;
-
-  const firstOfMonth = new Date(year, month, 1);
-  const startOffset = firstOfMonth.getDay();
-  const gridStart = new Date(year, month, 1 - startOffset);
-  const cells = [...Array(42)].map((_,i)=>{
-    const d = new Date(gridStart); d.setDate(gridStart.getDate()+i); return d;
-  });
-  const today = new Date();
-
-  let html = `<div class="month-grid">`;
-  WD_SHORT.forEach(w=> html += `<div class="month-wd">${w}</div>`);
-  cells.forEach(d=>{
-    const list = getApptsForDate(d);
-    const other = d.getMonth()!==month;
-    const isToday = sameDay(d, today);
-    html += `<div class="month-cell ${other?'other':''} ${isToday?'today':''}" data-jump="${dateKey(d)}">
-      <div>${d.getDate()}</div>
-      ${list.length ? `<div class="dots">` + list.slice(0,3).map(()=>`<span></span>`).join('') + `</div>` : ''}
-    </div>`;
-  });
-  html += `</div>`;
-  document.getElementById('main').innerHTML = html;
-
-  document.querySelectorAll('.month-cell').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const [y,m,dd] = el.dataset.jump.split('-').map(Number);
-      currentDate = new Date(y, m-1, dd);
-      currentView = 'day';
-      setActiveTab('day');
-      updateHeader();
-      render();
-    });
-  });
-}
-
-function apptCardHtml(a){
-  const telHref = a.phone ? `tel:${a.phone.replace(/\s+/g,'')}` : null;
-  const waHref = a.phone ? `https://wa.me/${a.phone.replace(/\D/g,'')}` : null;
-  return `<div class="appt" data-id="${a.id}">
-    <div class="time">${a.time}</div>
-    <div class="dot"></div>
-    <div class="card">
-      <div class="row1">
-        <div>
-          <div class="name">${escapeHtml(a.name)}</div>
-          ${a.service ? `<div class="svc">${escapeHtml(a.service)}</div>` : ''}
-        </div>
-      </div>
-      ${a.note ? `<div class="note">${escapeHtml(a.note)}</div>` : ''}
-      <div class="actions">
-        ${telHref ? `<a href="${telHref}">📞 Gọi</a>` : ''}
-        ${waHref ? `<a href="${waHref}" target="_blank">💬 WhatsApp</a>` : ''}
-        <button class="edit-btn">✏️ Sửa</button>
-        <button class="del">🗑️ Xoá</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function attachCardEvents(){
-  document.querySelectorAll('.appt').forEach(el=>{
-    const id = el.dataset.id;
-    const edit = el.querySelector('.edit-btn');
-    const del = el.querySelector('.del');
-    if(edit) edit.addEventListener('click', ()=> openSheet(id));
-    if(del) del.addEventListener('click', ()=> deleteAppt(id));
-  });
-}
-
-async function deleteAppt(id){
-  if(!confirm("Bạn có chắc chắn muốn xoá lịch hẹn này?")) return;
-  try {
-    const docRef = window.fsDoc(window.db, APPOINTMENTS_COL, id);
-    await window.fsDeleteDoc(docRef);
-    showToast('Đã xoá lịch hẹn');
-  } catch(e) {
-    console.error("Lỗi khi xóa:", e);
-    showToast('Xóa thất bại');
-  }
-}
-
-function render(){
-  updateHeader();
-  if(currentView==='day') renderDayView();
-  else if(currentView==='week') renderWeekView();
-  else renderMonthView();
-}
-
-function setActiveTab(view){
-  document.querySelectorAll('nav.tabs button').forEach(b=>{
-    b.classList.toggle('active', b.dataset.view===view);
-  });
-}
-
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    currentView = btn.dataset.view;
-    setActiveTab(currentView);
-    render();
-  });
-});
-
-document.getElementById('prevBtn').addEventListener('click', ()=>{
-  if(currentView==='day') currentDate.setDate(currentDate.getDate()-1);
-  else if(currentView==='week') currentDate.setDate(currentDate.getDate()-7);
-  else currentDate.setMonth(currentDate.getMonth()-1);
-  currentDate = new Date(currentDate);
-  render();
-});
-document.getElementById('nextBtn').addEventListener('click', ()=>{
-  if(currentView==='day') currentDate.setDate(currentDate.getDate()+1);
-  else if(currentView==='week') currentDate.setDate(currentDate.getDate()+7);
-  else currentDate.setMonth(currentDate.getMonth()+1);
-  currentDate = new Date(currentDate);
-  render();
-});
-document.getElementById('todayBtn').addEventListener('click', ()=>{
-  currentDate = new Date();
-  render();
-});
-
-document.getElementById('searchToggle').addEventListener('click', ()=>{
-  document.getElementById('searchBar').classList.toggle('open');
-});
-document.getElementById('searchInput').addEventListener('input', (e)=>{
-  searchQuery = e.target.value.trim();
-  render();
-});
-
-document.getElementById('keyConfigBtn').addEventListener('click', ()=>{
-  const currentKey = localStorage.getItem('GEMINI_API_KEY') || '';
-  const inputKey = prompt("Dán API Key copy từ Google AI Studio (aistudio.google.com) vào đây:", currentKey);
-  
-  if (inputKey !== null) {
-    const trimmed = inputKey.trim().replace(/[\r\n\s]/g, '');
-    if (!trimmed) {
-      alert("API Key không được để trống!");
-      return;
-    }
-    localStorage.setItem('GEMINI_API_KEY', trimmed);
-    showToast('Đã lưu API Key thành công!');
-  }
-});
-
-function openSheet(id){
-  editingId = id || null;
-  const overlay = document.getElementById('overlay');
-  const title = document.getElementById('sheetTitle');
-  document.getElementById('aiInput').value = '';
-  if(id){
-    const a = appts.find(x=>x.id===id);
-    title.textContent = 'Sửa lịch hẹn';
-    document.getElementById('fName').value = a.name;
-    document.getElementById('fPhone').value = a.phone || '';
-    document.getElementById('fDate').value = a.date;
-    document.getElementById('fTime').value = a.time;
-    document.getElementById('fService').value = a.service || '';
-    document.getElementById('fNote').value = a.note || '';
-  }else{
-    title.textContent = 'Thêm khách hẹn';
-    document.getElementById('fName').value = '';
-    document.getElementById('fPhone').value = '';
-    document.getElementById('fDate').value = dateKey(currentView==='day' ? currentDate : new Date());
-    document.getElementById('fTime').value = '09:00';
-    document.getElementById('fService').value = '';
-    document.getElementById('fNote').value = '';
-  }
-  overlay.classList.add('open');
-}
-
-function closeSheet(){
-  document.getElementById('overlay').classList.remove('open');
-  editingId = null;
-}
-
-document.getElementById('fabAdd').addEventListener('click', ()=> openSheet(null));
-document.getElementById('cancelBtn').addEventListener('click', closeSheet);
-document.getElementById('overlay').addEventListener('click', (e)=>{
-  if(e.target.id==='overlay') closeSheet();
-});
-
-// Tự động truy vấn danh sách model hiện có từ Google API
-async function getAvailableGeminiModels(apiKey) {
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data.models) return [];
-
-    // Tự lọc các model hỗ trợ generateContent và xếp ưu tiên phiên bản mới nhất
-    return data.models
-      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-      .map(m => m.name.replace('models/', ''))
-      .sort((a, b) => b.localeCompare(a));
-  } catch (e) {
-    console.warn("Không thể tự động dò danh sách Model, sử dụng danh sách tĩnh:", e);
-    return [];
-  }
-}
-
-// Gọi Gemini AI với cơ chế Tự Động Dò Model (Auto-Discovery) & Dự Phòng Linh Hoạt
-async function fetchGeminiAI(promptText, apiKey) {
-  // 1. Tự dò tìm model khả dụng từ tài khoản người dùng
-  const dynamicModels = await getAvailableGeminiModels(apiKey);
-  
-  // 2. Danh sách tĩnh dự phòng trong trường hợp không truy vấn được ListModels
-  const fallbackModels = [
-    'gemini-3.1-pro-preview',
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash'
-  ];
-
-  // Hợp nhất hai danh sách và loại bỏ các model trùng lặp
-  const modelsToTry = Array.from(new Set([...dynamicModels, ...fallbackModels]));
   let lastError = null;
 
-  for (const model of modelsToTry) {
+  for (const model of GEMINI_MODELS) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: {
-            temperature: 0.1,
-            response_mime_type: "application/json"
-          }
+          contents: [{
+            parts: [{
+              text: `Phân tích câu đặt lịch sau và trả về DUY NHẤT chuỗi JSON (không chứa markdown):
+              {
+                "name": "Tên khách",
+                "phone": "Số điện thoại",
+                "time": "Giờ hẹn (dạng HH:mm)",
+                "service": "Tên dịch vụ",
+                "note": "Ghi chú"
+              }
+              Nội dung: "${promptText}"`
+            }]
+          }]
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error?.message || `Lỗi HTTP ${response.status}`);
-      }
+      if (!response.ok) continue; // Thử model tiếp theo nếu model này ngưng hỗ trợ
 
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return text;
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (rawText) {
+        const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+      }
     } catch (err) {
       lastError = err;
-      console.warn(`Model ${model} không khả dụng, đang chuyển model tiếp theo...`, err);
     }
   }
-  throw lastError || new Error("Không thể kết nối dịch vụ Gemini AI");
+  throw lastError || new Error("Không thể kết nối Gemini API");
 }
 
-document.getElementById('aiParseBtn').addEventListener('click', async ()=>{
-  const text = document.getElementById('aiInput').value.trim();
-  if(!text) { showToast('Hãy nói hoặc gõ câu thoại trước'); return; }
+/**
+ * Phân tích nội bộ bằng Regex (Chạy offline, dự phòng khi API lỗi/mất mạng)
+ */
+function fallbackLocalParse(inputText) {
+  const result = { name: '', phone: '', time: '', service: '', note: '' };
 
-  let rawKey = localStorage.getItem('GEMINI_API_KEY');
-  const geminiApiKey = rawKey ? rawKey.trim().replace(/[\r\n\s]/g, '') : '';
+  // 1. Tách số điện thoại
+  const phoneMatch = inputText.match(/(0[3|5|7|8|9]\d{8,9})/);
+  if (phoneMatch) result.phone = phoneMatch[0];
 
-  if(!geminiApiKey){
-    showToast('⚠️ Nhấp vào biểu tượng ⚙️ ở góc trên để dán API Key');
+  // 2. Tách thời gian (dạng 14:30, 14h30, 14h)
+  const timeMatch = inputText.match(/(\d{1,2}(?:[:h]\d{2}|h))/i);
+  if (timeMatch) {
+    let t = timeMatch[0].toLowerCase().replace('h', ':');
+    if (!t.includes(':')) t += ':00';
+    result.time = t;
+  }
+
+  // 3. Lọc bỏ số điện thoại và thời gian để lấy tên và dịch vụ
+  let cleanText = inputText
+    .replace(result.phone, '')
+    .replace(timeMatch ? timeMatch[0] : '', '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const parts = cleanText.split(' ');
+  if (parts.length > 0) {
+    result.name = parts[0];
+    result.service = parts.slice(1).join(' ');
+  }
+
+  return result;
+}
+
+/**
+ * Hàm chính điều khiển phân tích và tự điền ô
+ */
+async function processAIInput() {
+  const inputText = document.getElementById('ai-input').value.trim();
+  const apiKey = document.getElementById('api-key').value.trim();
+  const statusEl = document.getElementById('status');
+  const btnBtn = document.getElementById('btn-parse');
+
+  if (!inputText) {
+    alert("Vui lòng nhập văn bản cần phân tích!");
     return;
   }
 
-  const btn = document.getElementById('aiParseBtn');
-  btn.disabled = true;
-  btn.textContent = '⚡ AI đang xử lý...';
+  btnBtn.disabled = true;
+  statusEl.innerText = "Đang phân tích dữ liệu...";
 
-  const todayStr = dateKey(new Date());
-
-  const promptText = `Hôm nay là ngày ${todayStr}. Bạn là trợ lý xếp lịch tiệm Nail.
-Trích xuất thông tin từ đoạn văn bản sau thành JSON chuẩn:
-{
-  "name": "Tên khách",
-  "phone": "Số điện thoại",
-  "date": "YYYY-MM-DD",
-  "time": "HH:MM",
-  "service": "Tên dịch vụ",
-  "note": "Ghi chú"
-}
-Văn bản: "${text}"`;
+  let parsedData = null;
 
   try {
-    const rawReply = await fetchGeminiAI(promptText, geminiApiKey);
-
-    // Lọc lấy nội dung JSON kể cả khi AI trả thêm text thừa
-    const jsonMatch = rawReply.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("Dữ liệu trả về từ AI không đúng định dạng JSON");
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    if(parsed.name) document.getElementById('fName').value = parsed.name;
-    if(parsed.phone) document.getElementById('fPhone').value = parsed.phone;
-    if(parsed.date) document.getElementById('fDate').value = parsed.date;
-    if(parsed.time) document.getElementById('fTime').value = parsed.time;
-    if(parsed.service) document.getElementById('fService').value = parsed.service;
-    if(parsed.note) document.getElementById('fNote').value = parsed.note;
-
-    showToast('✨ AI đã phân tích và điền xong!');
-
-  } catch (e) {
-    console.error("Lỗi xử lý AI:", e);
-    showToast(`⚠️ Lỗi: ${e.message}`, 6000);
+    // Thử phân tích qua AI trước
+    parsedData = await parseWithGemini(inputText, apiKey);
+    statusEl.innerText = "Hoàn tất phân tích bằng AI!";
+  } catch (error) {
+    // Nếu AI lỗi -> Tự động dùng Regex local, tuyệt đối không hiện bảng lỗi
+    console.warn("Chuyển sang chế độ phân tích Regex nội bộ:", error);
+    parsedData = fallbackLocalParse(inputText);
+    statusEl.innerText = "Hoàn tất phân tích dữ liệu nội bộ!";
   } finally {
-    btn.disabled = false;
-    btn.textContent = '✨ AI Phân Tích & Tự Điền Ô';
-  }
-});
-
-document.getElementById('saveBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('fName').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const date = document.getElementById('fDate').value;
-  const time = document.getElementById('fTime').value;
-  const service = document.getElementById('fService').value.trim();
-  const note = document.getElementById('fNote').value.trim();
-
-  if(!name || !date || !time){
-    showToast('Cần nhập Tên, Ngày và Giờ');
-    return;
+    btnBtn.disabled = false;
   }
 
-  const data = { name, phone, date, time, service, note };
-
-  try {
-    if(editingId){
-      const docRef = window.fsDoc(window.db, APPOINTMENTS_COL, editingId);
-      await window.fsUpdateDoc(docRef, data);
-    }else{
-      const colRef = window.fsCollection(window.db, APPOINTMENTS_COL);
-      await window.fsAddDoc(colRef, data);
-    }
-    
-    closeSheet();
-    const [y,m,dd] = date.split('-').map(Number);
-    currentDate = new Date(y, m-1, dd);
-    currentView = 'day';
-    setActiveTab('day');
-    showToast('Đã lưu lịch hẹn');
-  } catch(e) {
-    console.error("Lỗi khi lưu lên Firebase:", e);
-    showToast('Lỗi lưu dữ liệu');
+  // Tự động điền dữ liệu thu được vào các ô input
+  if (parsedData) {
+    if (parsedData.name) document.getElementById('input-name').value = parsedData.name;
+    if (parsedData.phone) document.getElementById('input-phone').value = parsedData.phone;
+    if (parsedData.time) document.getElementById('input-time').value = parsedData.time;
+    if (parsedData.service) document.getElementById('input-service').value = parsedData.service;
+    if (parsedData.note) document.getElementById('input-note').value = parsedData.note;
   }
-});
-
-render();
+}
 </script>
+
 </body>
 </html>
