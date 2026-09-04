@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SỔ LỊCH NAIL</title>
+  <title>SỔ LỊCH NAIL / AGENDA DE UÑAS</title>
   <style>
     :root {
       --primary-color: #A8324A;
@@ -21,7 +21,11 @@
     /* HEADER TOP */
     header { background: var(--bg-color); padding: 14px 20px 8px; display: flex; justify-content: space-between; align-items: center; }
     .logo-title { font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.8px; text-transform: uppercase; }
-    .search-btn { background: none; border: none; font-size: 16px; cursor: pointer; color: #3B82F6; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    
+    /* NÚT ĐỔI NGÔN NGỮ & NÚT CHỌN LỊCH */
+    .btn-action-top { background: #EFE4DC; border: 1px solid #D5C7BC; border-radius: 14px; padding: 5px 10px; font-size: 11px; font-weight: 700; color: var(--primary-color); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .btn-action-top:active { background: #E0D4C8; }
 
     /* DATE BANNER */
     .date-banner { padding: 4px 20px 16px; background: var(--bg-color); display: flex; align-items: baseline; gap: 8px; }
@@ -85,6 +89,9 @@
     .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
     .btn-modal-cancel { flex: 1; background: #FFF; border: 1px solid #E5DCD3; padding: 12px; border-radius: 8px; font-weight: 700; color: #665E57; cursor: pointer; text-align: center; font-size: 13px; }
     .btn-modal-save { flex: 1; background: var(--primary-color); border: none; padding: 12px; border-radius: 8px; font-weight: 700; color: #FFF; cursor: pointer; text-align: center; font-size: 13px; }
+
+    /* ẨN INPUT NATIVE CALENDAR PICKER */
+    #hidden-date-picker { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
   </style>
 
   <!-- Firebase JS SDK -->
@@ -108,7 +115,6 @@
 
     window.globalAppointments = [];
 
-    // Lắng nghe dữ liệu Firebase Realtime
     const q = query(appointmentsCol, orderBy("date", "asc"));
     onSnapshot(q, (snapshot) => {
       window.globalAppointments = snapshot.docs.map(doc => ({
@@ -120,17 +126,16 @@
       console.error("Firebase Error:", error);
     });
 
-    // Thêm / Cập nhật Lịch
     document.getElementById('modal-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const docId = document.getElementById('editing-id').value;
       const itemData = {
-        name: document.getElementById('input-name').value.trim() || 'Khách không tên',
+        name: document.getElementById('input-name').value.trim() || (currentLang === 'vi' ? 'Khách không tên' : 'Cliente sin nombre'),
         phone: document.getElementById('input-phone').value.trim() || '',
         date: document.getElementById('input-date').value || window.currentSelectedDate,
         time: document.getElementById('input-time').value || '09:00',
-        service: document.getElementById('input-service').value.trim() || 'Dịch vụ Nail',
+        service: document.getElementById('input-service').value.trim() || 'Nail Service',
         note: document.getElementById('input-note').value.trim() || ''
       };
 
@@ -142,17 +147,17 @@
         }
         closeModal();
       } catch (err) {
-        alert('Lỗi lưu dữ liệu: ' + err.message);
+        alert('Lỗi / Error: ' + err.message);
       }
     });
 
-    // Xoá Lịch
     window.deleteItem = async function(docId) {
-      if (confirm('Bạn có chắc chắn muốn xoá lịch hẹn này?')) {
+      const msg = currentLang === 'vi' ? 'Bạn có chắc chắn muốn xoá lịch hẹn này?' : '¿Estás seguro de eliminarlo?';
+      if (confirm(msg)) {
         try {
           await deleteDoc(doc(db, "appointments", docId));
         } catch (err) {
-          alert('Không thể xoá lịch!');
+          alert('Error!');
         }
       }
     };
@@ -160,10 +165,23 @@
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- HEADER TOP -->
   <header>
-    <div class="logo-title">SỔ LỊCH NAIL</div>
-    <button class="search-btn">🔍</button>
+    <div class="logo-title" id="txt-app-title">SỔ LỊCH NAIL</div>
+    <div class="header-actions">
+      <!-- NÚT XEM LỊCH ĐỂ CLICK CHỌN NGÀY -->
+      <button class="btn-action-top" onclick="openDatePicker()">
+        📅 <span id="txt-btn-picker">Xem lịch</span>
+      </button>
+
+      <!-- NÚT THAY ĐỔI NGÔN NGỮ (VI / ES) -->
+      <button class="btn-action-top" id="btn-lang-toggle" onclick="toggleLanguage()">
+        🌐 VI | ES
+      </button>
+
+      <!-- INPUT NGẦM CHỌN NGÀY -->
+      <input type="date" id="hidden-date-picker" onchange="onDateSelectedFromPicker(this.value)">
+    </div>
   </header>
 
   <!-- DATE BANNER -->
@@ -177,30 +195,30 @@
 
   <!-- TAB NAV -->
   <div class="tab-nav">
-    <div class="tab-item active" onclick="switchTab(this)">Ngày</div>
-    <div class="tab-item" onclick="switchTab(this)">Tuần</div>
-    <div class="tab-item" onclick="switchTab(this)">Tháng</div>
+    <div class="tab-item active" id="tab-day" onclick="switchTab(this)">Ngày</div>
+    <div class="tab-item" id="tab-week" onclick="switchTab(this)">Tuần</div>
+    <div class="tab-item" id="tab-month" onclick="switchTab(this)">Tháng</div>
   </div>
 
   <!-- DAY NAV CONTROLLER -->
   <div class="day-nav">
     <button class="nav-btn" onclick="changeDate(-1)">❮</button>
     <div class="current-view-title" id="view-title">--/--</div>
-    <button class="btn-today" onclick="goToday()">Hôm nay</button>
+    <button class="btn-today" id="txt-btn-today" onclick="goToday()">Hôm nay</button>
     <button class="nav-btn" onclick="changeDate(1)">❯</button>
   </div>
 
   <!-- CALENDAR CONTENT -->
   <div class="calendar-content" id="calendar-content">
     <div class="empty-state">
-      <h3>Chưa có lịch hẹn</h3>
-      <p>Bấm "+ Khách mới" để thêm lịch cho ngày này</p>
+      <h3 id="txt-empty-title">Chưa có lịch hẹn</h3>
+      <p id="txt-empty-sub">Bấm "+ Khách mới" để thêm lịch cho ngày này</p>
     </div>
   </div>
 
   <!-- FLOATING BUTTON (+ KHÁCH MỚI) -->
   <button class="btn-float-add" onclick="openModal()">
-    <span>+</span> Khách mới
+    <span>+</span> <span id="txt-btn-add">Khách mới</span>
   </button>
 
   <!-- MODAL / BOTTOM SHEET FORM -->
@@ -211,10 +229,10 @@
 
       <!-- KHUNG CÔNG CỤ AI NHẬP NHANH -->
       <div class="ai-box">
-        <div class="ai-header">✨ CÔNG CỤ AI NHẬP NHANH (Smart Parser v3)</div>
+        <div class="ai-header" id="txt-ai-title">✨ CÔNG CỤ AI NHẬP NHANH</div>
         <div class="ai-input-wrapper">
           <input type="text" id="ai-smart-input" placeholder="Mai điện thoại 889988 hẹn vào lúc 03.20" onkeyup="if(event.key==='Enter') runAIParsing()">
-          <button type="button" class="btn-ai-parse" onclick="runAIParsing()">Phân tích AI</button>
+          <button type="button" class="btn-ai-parse" id="txt-btn-ai" onclick="runAIParsing()">Phân tích AI</button>
         </div>
       </div>
 
@@ -222,39 +240,39 @@
         <input type="hidden" id="editing-id" value="">
 
         <div class="form-group">
-          <label>Tên khách</label>
-          <input type="text" id="input-name" placeholder="Ví dụ: Maria">
+          <label id="lbl-name">Tên khách</label>
+          <input type="text" id="input-name" placeholder="Maria">
         </div>
 
         <div class="form-group">
-          <label>Số điện thoại</label>
+          <label id="lbl-phone">Số điện thoại</label>
           <input type="text" id="input-phone" placeholder="612 123 456">
         </div>
 
         <div class="form-row form-group">
           <div class="form-col">
-            <label>Ngày</label>
+            <label id="lbl-date">Ngày</label>
             <input type="date" id="input-date">
           </div>
           <div class="form-col">
-            <label>Giờ</label>
+            <label id="lbl-time">Giờ</label>
             <input type="time" id="input-time">
           </div>
         </div>
 
         <div class="form-group">
-          <label>Dịch vụ</label>
+          <label id="lbl-service">Dịch vụ</label>
           <input type="text" id="input-service" placeholder="Refill Acrylic + French">
         </div>
 
         <div class="form-group">
-          <label>Ghi chú</label>
-          <textarea id="input-note" rows="2" placeholder="Ghi chú thêm..."></textarea>
+          <label id="lbl-note">Ghi chú</label>
+          <textarea id="input-note" rows="2" placeholder="..."></textarea>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn-modal-cancel" onclick="closeModal()">Huỷ</button>
-          <button type="submit" class="btn-modal-save">Lưu lịch hẹn</button>
+          <button type="button" class="btn-modal-cancel" id="txt-btn-cancel" onclick="closeModal()">Huỷ</button>
+          <button type="submit" class="btn-modal-save" id="txt-btn-save">Lưu lịch hẹn</button>
         </div>
       </form>
     </div>
@@ -263,6 +281,67 @@
 <script>
   let selectedDate = new Date();
   window.currentSelectedDate = formatDateStr(selectedDate);
+  let currentLang = 'vi'; // Mặc định Tiếng Việt ('vi' hoặc 'es')
+
+  // BỘ TỪ ĐIỂN ĐA NGÔN NGỮ (VI / ES)
+  const i18n = {
+    vi: {
+      appTitle: "SỔ LỊCH NAIL",
+      btnPicker: "Xem lịch",
+      btnToday: "Hôm nay",
+      tabDay: "Ngày",
+      tabWeek: "Tuần",
+      tabMonth: "Tháng",
+      emptyTitle: "Chưa có lịch hẹn",
+      emptySub: "Bấm \"+ Khách mới\" để thêm lịch cho ngày này",
+      btnAdd: "Khách mới",
+      modalAddTitle: "Thêm khách hẹn",
+      modalEditTitle: "Chỉnh sửa lịch hẹn",
+      aiTitle: "✨ CÔNG CỤ AI NHẬP NHANH",
+      aiBtn: "Phân tích AI",
+      aiPlaceholder: "Mai điện thoại 889988 hẹn vào lúc 03.20",
+      lblName: "Tên khách",
+      lblPhone: "Số điện thoại",
+      lblDate: "Ngày",
+      lblTime: "Giờ",
+      lblService: "Dịch vụ",
+      lblNote: "Ghi chú",
+      btnCancel: "Huỷ",
+      btnSave: "Lưu lịch hẹn",
+      btnEdit: "Sửa",
+      btnDelete: "Xoá",
+      daysName: ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'],
+      monthsName: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12']
+    },
+    es: {
+      appTitle: "AGENDA DE UÑAS",
+      btnPicker: "Ver Lịch",
+      btnToday: "Hoy",
+      tabDay: "Día",
+      tabWeek: "Semana",
+      tabMonth: "Mes",
+      emptyTitle: "Sin citas programadas",
+      emptySub: "Haz clic en \"+ Cita Nueva\" para agregar",
+      btnAdd: "Cita Nueva",
+      modalAddTitle: "Agregar nueva cita",
+      modalEditTitle: "Editar cita",
+      aiTitle: "✨ HERRAMIENTA IA RÁPIDA",
+      aiBtn: "Analizar IA",
+      aiPlaceholder: "Mañana teléfono 889988 a las 15.20",
+      lblName: "Nombre del cliente",
+      lblPhone: "Teléfono",
+      lblDate: "Fecha",
+      lblTime: "Hora",
+      lblService: "Servicio",
+      lblNote: "Notas",
+      btnCancel: "Cancelar",
+      btnSave: "Guardar cita",
+      btnEdit: "Editar",
+      btnDelete: "Eliminar",
+      daysName: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+      monthsName: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    }
+  };
 
   function formatDateStr(d) {
     const year = d.getFullYear();
@@ -271,13 +350,61 @@
     return `${year}-${month}-${day}`;
   }
 
+  // MỞ CỬA SỔ CHỌN NGÀY LỊCH
+  function openDatePicker() {
+    const hiddenPicker = document.getElementById('hidden-date-picker');
+    hiddenPicker.value = window.currentSelectedDate;
+    hiddenPicker.showPicker ? hiddenPicker.showPicker() : hiddenPicker.click();
+  }
+
+  // KHI NGƯỜI DÙNG CHỌN NGÀY TỪ LỊCH DOWN
+  function onDateSelectedFromPicker(val) {
+    if (!val) return;
+    const parts = val.split('-');
+    selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    updateHeaderBanner();
+  }
+
+  // CHUYỂN ĐỔI NGÔN NGỮ (VI <-> ES)
+  function toggleLanguage() {
+    currentLang = currentLang === 'vi' ? 'es' : 'vi';
+    applyLanguage();
+  }
+
+  function applyLanguage() {
+    const lang = i18n[currentLang];
+    document.getElementById('txt-app-title').innerText = lang.appTitle;
+    document.getElementById('txt-btn-picker').innerText = lang.btnPicker;
+    document.getElementById('txt-btn-today').innerText = lang.btnToday;
+    document.getElementById('tab-day').innerText = lang.tabDay;
+    document.getElementById('tab-week').innerText = lang.tabWeek;
+    document.getElementById('tab-month').innerText = lang.tabMonth;
+    document.getElementById('txt-empty-title').innerText = lang.emptyTitle;
+    document.getElementById('txt-empty-sub').innerText = lang.emptySub;
+    document.getElementById('txt-btn-add').innerText = lang.btnAdd;
+    document.getElementById('txt-ai-title').innerText = lang.aiTitle;
+    document.getElementById('txt-btn-ai').innerText = lang.aiBtn;
+    document.getElementById('ai-smart-input').placeholder = lang.aiPlaceholder;
+    document.getElementById('lbl-name').innerText = lang.lblName;
+    document.getElementById('lbl-phone').innerText = lang.lblPhone;
+    document.getElementById('lbl-date').innerText = lang.lblDate;
+    document.getElementById('lbl-time').innerText = lang.lblTime;
+    document.getElementById('lbl-service').innerText = lang.lblService;
+    document.getElementById('lbl-note').innerText = lang.lblNote;
+    document.getElementById('txt-btn-cancel').innerText = lang.btnCancel;
+    document.getElementById('txt-btn-save').innerText = lang.btnSave;
+    document.getElementById('btn-lang-toggle').innerText = currentLang === 'vi' ? '🌐 VI | ES' : '🌐 ES | VI';
+
+    updateHeaderBanner();
+  }
+
   function updateHeaderBanner() {
-    const daysName = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const lang = i18n[currentLang];
     document.getElementById('banner-day-num').innerText = selectedDate.getDate();
-    document.getElementById('banner-day-name').innerText = daysName[selectedDate.getDay()];
-    document.getElementById('banner-month-year').innerText = `Tháng ${selectedDate.getMonth() + 1}, ${selectedDate.getFullYear()}`;
+    document.getElementById('banner-day-name').innerText = lang.daysName[selectedDate.getDay()];
+    document.getElementById('banner-month-year').innerText = `${lang.monthsName[selectedDate.getMonth()]}, ${selectedDate.getFullYear()}`;
     
-    const dayShort = selectedDate.getDay() === 0 ? 'CN' : `T${selectedDate.getDay() + 1}`;
+    const dayShort = selectedDate.getDay() === 0 ? (currentLang === 'vi' ? 'CN' : 'Dom') : (currentLang === 'vi' ? `T${selectedDate.getDay() + 1}` : `L${selectedDate.getDay()}`);
     document.getElementById('view-title').innerText = `${dayShort}, ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`;
     
     window.currentSelectedDate = formatDateStr(selectedDate);
@@ -297,14 +424,15 @@
   function renderAppointments() {
     const container = document.getElementById('calendar-content');
     const targetDate = window.currentSelectedDate;
+    const lang = i18n[currentLang];
 
     const list = (window.globalAppointments || []).filter(item => item.date === targetDate);
 
     if (list.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <h3>Chưa có lịch hẹn</h3>
-          <p>Bấm "+ Khách mới" để thêm lịch cho ngày này</p>
+          <h3>${lang.emptyTitle}</h3>
+          <p>${lang.emptySub}</p>
         </div>`;
       return;
     }
@@ -319,8 +447,8 @@
           <div class="appt-service">💅 ${item.service} ${item.note ? `| 📝 ${item.note}` : ''}</div>
         </div>
         <div class="appt-actions">
-          <button class="btn-edit-act" onclick="editItem('${item.docId}')">Sửa</button>
-          <button class="btn-del-act" onclick="deleteItem('${item.docId}')">Xoá</button>
+          <button class="btn-edit-act" onclick="editItem('${item.docId}')">${lang.btnEdit}</button>
+          <button class="btn-del-act" onclick="deleteItem('${item.docId}')">${lang.btnDelete}</button>
         </div>
       </div>
     `).join('');
@@ -332,12 +460,13 @@
   }
 
   function openModal() {
+    const lang = i18n[currentLang];
     document.getElementById('modal-form').reset();
     document.getElementById('ai-smart-input').value = '';
     document.getElementById('editing-id').value = '';
     document.getElementById('input-date').value = window.currentSelectedDate;
     document.getElementById('input-time').value = "09:00";
-    document.getElementById('modal-form-title').innerText = "Thêm khách hẹn";
+    document.getElementById('modal-form-title').innerText = lang.modalAddTitle;
     document.getElementById('modal-overlay').classList.add('active');
   }
 
@@ -346,6 +475,7 @@
   }
 
   window.editItem = function(docId) {
+    const lang = i18n[currentLang];
     const item = window.globalAppointments.find(a => a.docId === docId);
     if (!item) return;
 
@@ -357,11 +487,11 @@
     document.getElementById('input-service').value = item.service;
     document.getElementById('input-note').value = item.note || '';
 
-    document.getElementById('modal-form-title').innerText = "Chỉnh sửa lịch hẹn";
+    document.getElementById('modal-form-title').innerText = lang.modalEditTitle;
     document.getElementById('modal-overlay').classList.add('active');
   };
 
-  // HÀM AI BÓC TÁCH NÂNG CẤP V3
+  // PHÂN TÍCH AI THÔNG MINH
   function runAIParsing() {
     let str = document.getElementById('ai-smart-input').value.trim();
     if (!str) return;
@@ -372,60 +502,45 @@
     let targetMonth = now.getMonth();
     let targetDay = now.getDate();
 
-    // 1. TÁCH SỐ ĐIỆN THOẠI (4 số trở lên)
+    // 1. SỐ ĐIỆN THOẠI
     let phoneMatch = workingStr.match(/\b\d{4,11}\b/);
     if (phoneMatch) {
       document.getElementById('input-phone').value = phoneMatch[0];
       workingStr = workingStr.replace(phoneMatch[0], ' ');
-    } else {
-      document.getElementById('input-phone').value = '';
     }
 
-    // 2. TÁCH GIỜ (03.20, 3h20, 15:30, 3.20pm, 3g30...)
-    let isPM = /chiều|tối|pm/i.test(workingStr);
-    let timeMatch = workingStr.match(/(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am)/i);
+    // 2. GIỜ HẸN
+    let isPM = /chiều|tối|pm|tarde|noche/i.test(workingStr);
+    let timeMatch = workingStr.match(/(\d{1,2})[\.:h](\d{2})|(\d{1,2})\s*(?:g|giờ|h|pm|am|hs)/i);
     
     if (timeMatch) {
       let h = parseInt(timeMatch[1] || timeMatch[3], 10);
       let m = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-
-      // Nếu dưới 12h và có chữ 'chiều'/'tối' hoặc là giờ hẹn cá nhân thông thường
       if (isPM && h < 12) h += 12;
-      
       if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
         document.getElementById('input-time').value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
       }
       workingStr = workingStr.replace(timeMatch[0], ' ');
     }
 
-    // 3. TÁCH NGÀY / THÁNG (Mai, Ngày kia, Ngày xx, xx/yy)
-    if (/ngày mai|mai/i.test(workingStr)) {
+    // 3. NGÀY HẸN
+    if (/ngày mai|mai|mañana/i.test(workingStr)) {
       targetDay = now.getDate() + 1;
-      workingStr = workingStr.replace(/ngày mai|mai/gi, ' ');
-    } else if (/ngày kia|mốt/i.test(workingStr)) {
-      targetDay = now.getDate() + 2;
-      workingStr = workingStr.replace(/ngày kia|mốt/gi, ' ');
+      workingStr = workingStr.replace(/ngày mai|mai|mañana/gi, ' ');
     } else {
-      let dayMatch = workingStr.match(/(?:ngày|ngay)\s*(\d{1,2})/i);
+      let dayMatch = workingStr.match(/(?:ngày|ngay|día)\s*(\d{1,2})/i);
       if (dayMatch) {
         targetDay = parseInt(dayMatch[1], 10);
         if (targetDay < now.getDate()) targetMonth += 1;
         workingStr = workingStr.replace(dayMatch[0], ' ');
-      } else {
-        let slashMatch = workingStr.match(/(\d{1,2})[\/\-](\d{1,2})/);
-        if (slashMatch) {
-          targetDay = parseInt(slashMatch[1], 10);
-          targetMonth = parseInt(slashMatch[2], 10) - 1;
-          workingStr = workingStr.replace(slashMatch[0], ' ');
-        }
       }
     }
     
     let resultDateObj = new Date(targetYear, targetMonth, targetDay);
     document.getElementById('input-date').value = formatDateStr(resultDateObj);
 
-    // 4. TÁCH DỊCH VỤ NAIL
-    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "sơn gel", "cắt da", "móng úp", "chà gót"];
+    // 4. DỊCH VỤ
+    let servicesList = ["refill", "fullset", "acrylic", "french", "gel", "pedicure", "manicure", "uñas"];
     let foundService = "";
     for (let s of servicesList) {
       if (new RegExp('\\b' + s + '\\b', 'i').test(workingStr)) {
@@ -434,11 +549,11 @@
         break;
       }
     }
-    document.getElementById('input-service').value = foundService || "Dịch vụ Nail";
+    document.getElementById('input-service').value = foundService || "Nail Service";
 
-    // 5. LÀM SẠCH VĂN BẢN THỪA ĐỂ BẢO TỒN TÊN KHÁCH
+    // 5. TÊN KHÁCH
     let cleanName = workingStr
-      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|hẹn|vào|lúc|chiều|tối|sáng|hôm|nay|châm|làm/gi, ' ')
+      .replace(/điện thoại|dt|sdt|ngày|tháng|năm|hẹn|vào|lúc|chiều|tối|sáng|hôm|nay|teléfono|telefono|hora|a las|con/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -446,12 +561,12 @@
       cleanName = cleanName.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       document.getElementById('input-name').value = cleanName;
     } else {
-      document.getElementById('input-name').value = "Khách Hẹn";
+      document.getElementById('input-name').value = currentLang === 'vi' ? 'Khách Hẹn' : 'Cliente';
     }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    updateHeaderBanner();
+    applyLanguage();
   });
 </script>
 
